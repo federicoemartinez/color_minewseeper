@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-theme="flat">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A daily logic puzzle: one mine per row, column and color. Never a guess.">
+  <meta name="theme-color" content="#fbf8f3">
+  <title>Minewseeper</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/themes.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="flat-flag" viewBox="0 0 24 24"><path d="M7 3v18" stroke="#333" stroke-width="2" stroke-linecap="round"/><path d="M8 4h10l-3 4 3 4H8z" fill="#e5484d"/></symbol>
+    <symbol id="flat-mine" viewBox="0 0 24 24"><g stroke="#222" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></g><circle cx="12" cy="12" r="6" fill="#222"/><circle cx="10" cy="10" r="1.6" fill="#fff"/></symbol>
+    <symbol id="flat-heart" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="currentColor"/></symbol>
+  </svg>
+
+  <main>
+    <section id="home">
+      <h1 class="logo"><svg aria-hidden="true"><use href="#flat-mine"/></svg>Minewseeper</h1>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Daily puzzle</h2>
+          <span class="pill" id="daily-streak" title="Daily streak">🔥 0</span>
+        </div>
+        <p class="muted" id="daily-date"></p>
+        <p class="daily-result" id="daily-result" hidden></p>
+        <button class="btn" id="daily-play" type="button">Play today's board</button>
+      </article>
+
+      <article class="card">
+        <h2>Arena</h2>
+        <p class="muted">Endless random boards</p>
+        <button class="btn alt" id="arena-play" type="button">New board</button>
+      </article>
+
+      <div class="totals">
+        <div><b id="total-played">0</b>played</div>
+        <div><b id="total-won">0</b>wins</div>
+        <div><b id="total-flawless">0</b>flawless</div>
+      </div>
+    </section>
+
+    <section id="play" hidden>
+      <header class="bar">
+        <button class="back" id="back" type="button" aria-label="Back to home">&larr;</button>
+        <span class="mode" id="mode-label"></span>
+        <span class="hearts" id="hearts" role="img"></span>
+      </header>
+      <div class="sub">
+        <span id="found"></span>
+        <span id="timer"></span>
+      </div>
+      <div class="board" id="board"></div>
+      <p class="hint">Tap = safe &middot; Double tap = mine</p>
+    </section>
+
+    <section id="result" hidden>
+      <div class="banner" id="banner"></div>
+      <p class="sub center" id="result-label"></p>
+      <div class="board small done" id="result-board" inert></div>
+      <div class="totals">
+        <div><b id="result-time">0:00</b>time</div>
+        <div><b class="hearts" id="result-lives" role="img"></b>lives</div>
+        <div id="result-streak-box"><b id="result-streak">🔥 0</b>day streak</div>
+      </div>
+      <button class="btn" id="share" type="button">Share result</button>
+      <button class="btn alt" id="again" type="button">New arena board</button>
+      <button class="btn ghost" id="to-home" type="button">Home</button>
+    </section>
+
+    <section id="tutorial" hidden></section>
+  </main>
+
+  <div class="loading" id="loading" role="status" hidden>Shuffling mines…</div>
+</body>
+</html>

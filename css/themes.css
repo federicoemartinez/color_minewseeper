@@ -1,0 +1,25 @@
+/* One block per theme, keyed on <html data-theme>. Region colors are --c0 … --c7. */
+[data-theme="flat"] {
+  --c0: #f4a6a6; --c1: #f7c98b; --c2: #f3e48a; --c3: #a8d8a0;
+  --c4: #9fc9ee; --c5: #c3a8e8; --c6: #f2b8d8; --c7: #95d5cf;
+  --bg: #fbf8f3;
+  --card: #fff;
+  --ink: #222;
+  --on-ink: #fff;
+  --muted: #6e665e;
+  --pill: #f1ece5;
+  --focus: #4a8ef0;
+  --veil: rgba(251, 248, 243, .88);
+  --line-thin: rgba(0, 0, 0, .14);
+  --line-thick: #2b2724;
+  --boom: #ff6b6b;
+  --heart: #e5484d;
+  --heart-off: #d9d2cc;
+  --banner-flawless: linear-gradient(135deg, #ffd54a, #ff9f1a);
+  --banner-flawless-ink: #3a2000;
+  --banner-won: linear-gradient(135deg, #b8e6b0, #6cc583);
+  --banner-won-ink: #123d1c;
+  --banner-lost: linear-gradient(135deg, #ff8f8f, #e5484d);
+  --banner-lost-ink: #fff;
+}
+[data-theme="flat"] .sq.safe::after { content: "×"; color: rgba(0, 0, 0, .38); font-weight: 600; }

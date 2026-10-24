@@ -1,0 +1,158 @@
+/* Layout and structure. Colors and marks come from themes.css. */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+           max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+section { display: flex; flex-direction: column; gap: 14px; }
+h1, h2, p { margin: 0; }
+button { font: inherit; color: inherit; }
+
+/* Home */
+.logo {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 18px 0 8px;
+  font-size: 30px; font-weight: 800; letter-spacing: -.5px;
+}
+.logo svg { width: 34px; height: 34px; }
+.card {
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .05);
+}
+.card h2 { font-size: 19px; font-weight: 800; }
+.card .btn { margin-top: 8px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pill {
+  background: var(--pill);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 14px; font-weight: 700;
+  white-space: nowrap;
+}
+.muted { color: var(--muted); font-size: 14px; }
+.daily-result { font-size: 18px; font-weight: 800; }
+.totals {
+  display: flex; justify-content: space-around;
+  padding: 6px 0;
+  color: var(--muted); font-size: 13px; text-align: center;
+}
+.totals b { display: block; color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1.3; }
+
+/* Buttons */
+.btn {
+  display: block; width: 100%;
+  border: 0; border-radius: 14px;
+  padding: 15px;
+  background: var(--ink); color: var(--on-ink);
+  font-weight: 700; font-size: 16px; line-height: 1.2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .08s, opacity .15s;
+}
+.btn:active { transform: scale(.98); }
+.btn.alt { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn:disabled { background: var(--pill); color: var(--muted); box-shadow: none; cursor: default; transform: none; }
+.btn:focus-visible, .back:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Play */
+.bar {
+  display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 8px;
+  font-weight: 700;
+}
+.back {
+  width: 44px; height: 44px;
+  border: 0; border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+  font-size: 22px; line-height: 1;
+  cursor: pointer;
+}
+.mode { font-size: 17px; }
+.hearts { display: inline-flex; gap: 3px; }
+.hearts svg { width: 24px; height: 24px; color: var(--heart); }
+.hearts svg.off { color: var(--heart-off); }
+.sub {
+  display: flex; justify-content: space-between;
+  color: var(--muted); font-size: 15px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sub.center { justify-content: center; }
+.hint { text-align: center; color: var(--muted); font-size: 14px; }
+
+/* Board: n x n buttons; --n is set by renderBoard. */
+.board {
+  --board-w: min(100vw - 32px, 480px);
+  width: var(--board-w);
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 8), 1fr);
+  border: 3px solid var(--line-thick);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.board.small { --board-w: min(100vw - 120px, 260px); }
+/* Each square draws only its right and bottom line, so every line is drawn once:
+   3px between colors, 1px inside a color, none against the board's own border. */
+.sq {
+  appearance: none;
+  min-width: 0; margin: 0; padding: 0;
+  aspect-ratio: 1;
+  display: grid; place-items: center;
+  border: 0 solid var(--line-thin);
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  font-size: calc(var(--board-w) / var(--n, 8) * .62);
+  line-height: 1;
+  cursor: pointer;
+}
+.sq.r3 { border-right: 3px solid var(--line-thick); }
+.sq.b3 { border-bottom: 3px solid var(--line-thick); }
+.sq.r0 { border-right-width: 0; }
+.sq.b0 { border-bottom-width: 0; }
+.sq svg { width: 68%; height: 68%; pointer-events: none; }
+.sq:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+@media (hover: hover) { .sq.unknown:hover { filter: brightness(1.06); } }
+.board.done .sq.safe::after { content: none; }
+
+/* Result */
+.banner {
+  margin-top: 12px;
+  border-radius: 16px;
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 24px; font-weight: 900; letter-spacing: .5px; text-transform: uppercase;
+  background: var(--banner-won); color: var(--banner-won-ink);
+}
+.banner.flawless { background: var(--banner-flawless); color: var(--banner-flawless-ink); }
+.banner.lost { background: var(--banner-lost); color: var(--banner-lost-ink); }
+.totals .hearts svg { width: 20px; height: 20px; vertical-align: -3px; }
+
+.loading {
+  position: fixed; inset: 0; z-index: 10;
+  display: grid; place-items: center;
+  background: var(--veil);
+  font-size: 20px; font-weight: 800;
+}
