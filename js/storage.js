@@ -15,18 +15,16 @@ function defaultStorage() {
 }
 
 export function createStore(storage = defaultStorage()) {
-  const mem = new Map(); // fallback, and the source of truth for anything written this session
+  const mem = new Map(); // only writes that never reached storage; storage is the source of truth
   const read = (key) => {
-    let raw = mem.get(key) ?? null; // every write lands here, so it is never staler than storage
+    let raw = mem.get(key) ?? null;
     if (raw === null) try { raw = storage?.getItem(key) ?? null; } catch { /* nothing stored */ }
     try { return raw === null ? null : JSON.parse(raw); } catch { return null; }
   };
   const write = (key, value) => {
-    try {
-      const raw = JSON.stringify(value);
-      mem.set(key, raw);
-      storage?.setItem(key, raw);
-    } catch { /* unserializable value or refused write: keep what memory has */ }
+    let raw;
+    try { raw = JSON.stringify(value); } catch { return; } // unserializable: keep what we have
+    try { storage.setItem(key, raw); mem.delete(key); } catch { mem.set(key, raw); } // no storage or refused write
   };
 
   return {

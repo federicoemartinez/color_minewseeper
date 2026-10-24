@@ -6,12 +6,12 @@ A daily logic puzzle in the spirit of Minesweeper: one mine per row, column and 
 
 ```
 python3 -m http.server 8000   # then open http://localhost:8000
-npm test                      # unit tests (node --test)
+npm test                      # unit tests (node --test; needs Node 22 or newer)
 ```
 
 ## Deploy (GitHub Pages)
 
-1. Bump `CACHE` in `sw.js` (e.g. `mws-v2`) on every deploy, or installed clients keep the old files.
+1. Bump `CACHE` in `sw.js` (e.g. `mws-v2`) on every deploy, or installed clients keep the old files. There is no `skipWaiting`, so an update reaches a player only after the app is fully closed (all tabs or windows) and reopened.
 2. Create a public GitHub repo `minewseeper` and push `main`.
 3. Settings -> Pages -> "Deploy from a branch", `main`, `/ (root)`.
 4. Open `https://<user>.github.io/minewseeper/` on a phone and check that it plays, installs to the home screen, and works in airplane mode.

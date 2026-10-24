@@ -27,7 +27,10 @@ export async function getBoard(n, seed) {
   }
 }
 
+// One history entry sits above Home while any other screen shows, so system Back (Android) goes Home.
+let pushed = false;
 function show(id) {
+  if (id !== 'home' && !pushed) { history.pushState(null, ''); pushed = true; }
   for (const s of document.querySelectorAll('main > section')) s.hidden = s.id !== id;
   window.scrollTo(0, 0);
 }
@@ -74,6 +77,7 @@ function pause() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) pause();
+  else if (!$('home').hidden) showHome(); // resumed, maybe on a new day
   else if (session?.game.status === 'playing' && !$('play').hidden && started(session.game)) startClock();
 });
 addEventListener('pagehide', pause);
@@ -195,19 +199,35 @@ $('board').addEventListener('pointerup', (e) => {
   if (sq && session) session.tap(Number(sq.dataset.i));
 });
 // Keyboard: Enter or Space on a focused square is a tap, pressed twice quickly a double tap.
-// (Not the click event: a pointer click there would count a second time and become a double tap.)
+// A pointer click (detail >= 1) is ignored: pointerup already counted it. A click with detail 0 is
+// assistive tech activating the square; it counts, unless the keydown above already did (a key's own click).
+let keyTapped = false;
 $('board').addEventListener('keydown', (e) => {
-  if ((e.key !== 'Enter' && e.key !== ' ') || e.repeat) return;
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  keyTapped = true;
   const sq = e.target.closest('.sq');
-  if (!sq || !session) return;
+  if (e.repeat || !sq || !session) return;
   e.preventDefault();
   session.tap(Number(sq.dataset.i));
+});
+$('board').addEventListener('keyup', () => setTimeout(() => { keyTapped = false; })); // after the key's click
+$('board').addEventListener('click', (e) => {
+  const sq = e.detail === 0 && !keyTapped && e.target.closest('.sq');
+  if (sq && session) session.tap(Number(sq.dataset.i));
 });
 $('daily-play').addEventListener('click', startDaily);
 $('arena-play').addEventListener('click', startArena);
 $('again').addEventListener('click', startArena);
-$('back').addEventListener('click', () => { pause(); session = null; showHome(); });
-$('to-home').addEventListener('click', () => { session = null; showHome(); });
+function goHome() {
+  pushed = false;
+  if (!$('tutorial').hidden) markTutorialSeen(); // system Back on the tutorial counts as Skip/Done
+  pause(); session = null;
+  showHome();
+}
+const leave = () => { if (pushed) { pushed = false; history.back(); } else goHome(); }; // popstate then runs goHome
+addEventListener('popstate', goHome);
+$('back').addEventListener('click', leave);
+$('to-home').addEventListener('click', leave);
 $('share').addEventListener('click', share);
 
 // --- Theme
@@ -226,12 +246,10 @@ $('themes').addEventListener('click', (e) => {
 });
 
 // --- Tutorial
+const markTutorialSeen = () => store.saveSettings({ ...store.loadSettings(), tutorialSeen: true });
 function showTutorial() {
   show('tutorial');
-  openTutorial(() => {
-    store.saveSettings({ ...store.loadSettings(), tutorialSeen: true });
-    showHome();
-  });
+  openTutorial(() => { markTutorialSeen(); leave(); });
 }
 $('how-to').addEventListener('click', showTutorial);
 

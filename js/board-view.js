@@ -29,7 +29,7 @@ export function renderBoard(el, game, theme) {
       r === n - 1 ? 'b0' : b.bottom && 'b3',
     ].filter(Boolean).join(' ');
     sq.style.backgroundColor = m === 'boom' ? 'var(--boom)' : `var(--c${regions[i]})`;
-    sq.setAttribute('aria-label', `Row ${r + 1}, column ${c + 1}, ${LABEL[m]}`);
+    sq.setAttribute('aria-label', `Row ${r + 1}, column ${c + 1}, color ${regions[i] + 1}, ${LABEL[m]}`);
     sq.innerHTML = m === 'mine' ? icon(`${theme}-flag`) : m === 'boom' ? boomIcon(theme) : revealed ? icon(`${theme}-mine`) : '';
   });
 }

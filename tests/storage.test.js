@@ -59,3 +59,15 @@ test('saving an unserializable value does not throw', () => {
   assert.doesNotThrow(() => st.saveStats({ n: 1n }));
   assert.deepEqual(st.loadStats(), emptyStats());
 });
+test('two stores on one storage see each other and do not clobber', () => {
+  const fs = fakeStorage();
+  const a = createStore(fs), b = createStore(fs);
+  const daily = { date: '2026-10-24', game: { n: 6, marks: ['safe'] } };
+  a.saveDaily({ date: '2026-10-23', game: { n: 6, marks: ['unknown'] } });
+  b.saveDaily(daily);
+  assert.deepEqual(a.loadDaily(), daily); // B's save is visible to A after A wrote the same key
+  const stats = { ...emptyStats(), arena: { ...emptyStats().arena, played: 1 } };
+  a.saveStats(stats);
+  assert.deepEqual(b.loadDaily(), daily); // A's save of another key leaves B's data alone
+  assert.deepEqual(a.loadStats(), stats);
+});

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mulberry32 } from '../js/rng.js';
+import { mulberry32, fnv1a } from '../js/rng.js';
 import { neighbors8 } from '../js/grid.js';
 import { solve } from '../js/solver.js';
 import { placeMines, paintRegions, rebalance, generateBoard, FREE_SHARE, MIN_REGION, MAX_REGION } from '../js/generator.js';
@@ -61,4 +61,12 @@ test('generateBoard: valid, solvable, within limits, repeatable', () => {
     assert.deepEqual(solve(8, board.regions), { solved: true, hardest: board.hardest, mines: board.mines });
     assert.deepEqual(generateBoard(8, seed), board);
   }
+});
+test('the 2026-10-24 daily board is pinned (a generator change must be deliberate)', () => {
+  assert.deepEqual(generateBoard(8, fnv1a('2026-10-24')), {
+    n: 8,
+    regions: [0,0,7,7,7,7,7,7,6,2,2,6,6,7,7,7,6,6,6,6,7,7,7,7,6,6,1,6,6,6,7,7,6,1,1,6,6,6,7,4,5,5,1,1,1,4,4,4,5,5,5,3,3,3,4,4,5,5,5,3,3,4,4,4],
+    mines: [0, 10, 22, 28, 39, 43, 53, 57],
+    hardest: 3,
+  });
 });
