@@ -191,6 +191,14 @@ button { font: inherit; color: inherit; }
 .banner.lost { background: var(--banner-lost); color: var(--banner-lost-ink); }
 .totals .hearts svg { width: 20px; height: 20px; vertical-align: -3px; }
 
+dialog.ask {
+  width: min(100% - 32px, 340px);
+  margin: auto; padding: 0; border: 0;
+  background: none; color: inherit;
+}
+dialog.ask::backdrop { background: rgba(0, 0, 0, .35); }
+dialog.ask .card { text-align: center; }
+
 .loading {
   position: fixed; inset: 0; z-index: 10;
   display: grid; place-items: center;

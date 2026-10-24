@@ -221,8 +221,17 @@ function act(s, i, kind) {
 function askHint() {
   const s = session, h = s && hintFor(s.game, s.hintsAsked);
   if (!h || s.game.status !== 'playing') return;
-  const free = s.mode === 'guide';
-  if (!free && (s.game.lives <= 1 || !confirm('A hint costs a life. Use one?'))) return;
+  if (s.mode === 'guide') return giveHint(s, h, true);
+  if (s.game.lives <= 1) return;
+  const d = $('hint-ask');
+  d.returnValue = '';
+  d.addEventListener('close', () => {
+    if (d.returnValue === 'yes' && s === session && s.game.status === 'playing') giveHint(s, h, false);
+  }, { once: true });
+  d.showModal();
+}
+
+function giveHint(s, h, free) {
   if (!free) takeHint(s.game);
   s.hint = h; s.hintsAsked++;
   saveDaily();
