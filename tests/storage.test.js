@@ -45,3 +45,17 @@ test('createStore() with no argument works without localStorage', () => {
   st.saveStats(emptyStats());
   assert.deepEqual(st.loadStats(), emptyStats());
 });
+test('reads see the latest save even when setItem fails but getItem works', () => {
+  const fs = fakeStorage();
+  fs.setItem('mws.settings', '{"theme":"flat","tutorialSeen":false}');
+  const st = createStore({ ...fs, setItem: deny });
+  st.saveSettings({ theme: 'pixel', tutorialSeen: true });
+  assert.deepEqual(st.loadSettings(), { theme: 'pixel', tutorialSeen: true });
+});
+test('saving an unserializable value does not throw', () => {
+  const st = createStore(fakeStorage());
+  const circ = {}; circ.self = circ;
+  assert.doesNotThrow(() => st.saveStats(circ));
+  assert.doesNotThrow(() => st.saveStats({ n: 1n }));
+  assert.deepEqual(st.loadStats(), emptyStats());
+});
