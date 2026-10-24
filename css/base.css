@@ -10,6 +10,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font);
 }
 main {
   max-width: 520px;
@@ -53,6 +54,31 @@ button { font: inherit; color: inherit; }
   color: var(--muted); font-size: 13px; text-align: center;
 }
 .totals b { display: block; color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1.3; }
+
+/* Theme picker: each button carries its own data-theme, so its preview uses that theme's variables. */
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.theme-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-width: 0;
+  border: 0; border-radius: 14px;
+  padding: 12px 4px 10px;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--line-thin);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-opt[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--ink); }
+.theme-opt:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pv { display: grid; grid-template-columns: repeat(2, 24px); gap: var(--pv-gap); }
+.pv i {
+  display: grid; place-items: center;
+  height: 24px;
+  border-radius: var(--tile-r);
+  box-shadow: var(--tile-fx);
+  background-image: var(--tile-gloss);
+}
+.pv svg { width: 72%; height: 72%; }
 
 /* Buttons */
 .btn {

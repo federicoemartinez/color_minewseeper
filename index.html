@@ -9,6 +9,8 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/themes.css">
+  <!-- Saved theme before first paint (key and values as in js/storage.js); app.js re-applies it. -->
+  <script>try { var t = JSON.parse(localStorage.getItem('mws.settings')).theme; if (t === 'pixel' || t === 'candy') document.documentElement.dataset.theme = t; } catch (e) {}</script>
   <script type="module" src="./js/app.js"></script>
 </head>
 <body>
@@ -16,6 +18,17 @@
     <symbol id="flat-flag" viewBox="0 0 24 24"><path d="M7 3v18" stroke="#333" stroke-width="2" stroke-linecap="round"/><path d="M8 4h10l-3 4 3 4H8z" fill="#e5484d"/></symbol>
     <symbol id="flat-mine" viewBox="0 0 24 24"><g stroke="#222" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></g><circle cx="12" cy="12" r="6" fill="#222"/><circle cx="10" cy="10" r="1.6" fill="#fff"/></symbol>
     <symbol id="flat-heart" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="currentColor"/></symbol>
+    <symbol id="pixel-flag" viewBox="0 0 13 13" shape-rendering="crispEdges"><g fill="#e00"><rect x="5" y="1" width="2" height="1"/><rect x="3" y="2" width="4" height="1"/><rect x="2" y="3" width="5" height="1"/><rect x="3" y="4" width="4" height="1"/><rect x="5" y="5" width="2" height="1"/></g><g fill="#000"><rect x="7" y="1" width="1" height="8"/><rect x="5" y="8" width="5" height="1"/><rect x="3" y="9" width="9" height="2"/></g></symbol>
+    <symbol id="pixel-mine" viewBox="0 0 13 13" shape-rendering="crispEdges"><g fill="#000"><rect x="6" y="0" width="1" height="13"/><rect x="0" y="6" width="13" height="1"/><rect x="3" y="3" width="7" height="7"/><rect x="4" y="2" width="5" height="9"/><rect x="2" y="4" width="9" height="5"/><rect x="2" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/></g><rect x="4" y="4" width="2" height="2" fill="#fff"/></symbol>
+    <symbol id="pixel-heart" viewBox="0 0 7 6" shape-rendering="crispEdges"><g fill="currentColor"><rect x="1" y="0" width="2" height="1"/><rect x="4" y="0" width="2" height="1"/><rect x="0" y="1" width="7" height="2"/><rect x="1" y="3" width="5" height="1"/><rect x="2" y="4" width="3" height="1"/><rect x="3" y="5" width="1" height="1"/></g></symbol>
+    <defs>
+      <radialGradient id="candy-g-bomb" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#5a5a72"/><stop offset="1" stop-color="#1c1c28"/></radialGradient>
+      <linearGradient id="candy-g-heart" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a93"/><stop offset="1" stop-color="#e0244a"/></linearGradient>
+    </defs>
+    <symbol id="candy-flag" viewBox="0 0 24 24"><ellipse cx="7" cy="21.5" rx="5" ry="1.5" fill="rgba(0,0,0,.2)"/><rect x="5.5" y="3" width="2.6" height="18.5" rx="1.3" fill="#7a5a40"/><path d="M8 4.5q5-2.5 11 .5v8q-5.5-3-11-.5z" fill="#ff4d6d"/><path d="M8 4.5q5-2.5 11 .5v2q-5.5-2.5-11-.5z" fill="#fff" opacity=".35"/></symbol>
+    <symbol id="candy-mine" viewBox="0 0 26 26"><circle cx="11" cy="15" r="8.5" fill="url(#candy-g-bomb)"/><rect x="13.5" y="4.5" width="5" height="4" rx="1" fill="#444" transform="rotate(40 16 6.5)"/><path d="M18 5q2.5-3 5-1.5" stroke="#b07a4a" stroke-width="1.5" fill="none"/><circle cx="23" cy="3.5" r="2.2" fill="#ffc400"/><ellipse cx="8" cy="12" rx="2.5" ry="1.6" fill="#fff" opacity=".45"/></symbol>
+    <symbol id="candy-heart" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="url(#candy-g-heart)"/><ellipse cx="7.5" cy="9.5" rx="2.2" ry="1.4" fill="#fff" opacity=".6"/></symbol>
+    <symbol id="candy-burst" viewBox="0 0 24 24"><polygon points="12,1 14.5,8 22,6 17,12 22,18 14.5,16 12,23 9.5,16 2,18 7,12 2,6 9.5,8" fill="#ffb02e"/><polygon points="12,5 13.6,9.6 18,8.5 15,12 18,15.5 13.6,14.4 12,19 10.4,14.4 6,15.5 9,12 6,8.5 10.4,9.6" fill="#ffe066"/></symbol>
   </svg>
 
   <main>
@@ -42,6 +55,21 @@
         <div><b id="total-played">0</b>played</div>
         <div><b id="total-won">0</b>wins</div>
         <div><b id="total-flawless">0</b>flawless</div>
+      </div>
+
+      <div class="themes" id="themes" role="group" aria-label="Theme">
+        <button class="theme-opt" type="button" data-theme="flat" aria-pressed="true">
+          <span class="pv" aria-hidden="true"><i style="background-color:var(--c0)"><svg><use href="#flat-flag"/></svg></i><i style="background-color:var(--c4)"></i><i style="background-color:var(--c1)"></i><i style="background-color:var(--c3)"><svg><use href="#flat-mine"/></svg></i></span>
+          Flat
+        </button>
+        <button class="theme-opt" type="button" data-theme="pixel" aria-pressed="false">
+          <span class="pv" aria-hidden="true"><i style="background-color:var(--c0)"><svg><use href="#pixel-flag"/></svg></i><i style="background-color:var(--c4)"></i><i style="background-color:var(--c1)"></i><i style="background-color:var(--c3)"><svg><use href="#pixel-mine"/></svg></i></span>
+          Pixel
+        </button>
+        <button class="theme-opt" type="button" data-theme="candy" aria-pressed="false">
+          <span class="pv" aria-hidden="true"><i style="background-color:var(--c0)"><svg><use href="#candy-flag"/></svg></i><i style="background-color:var(--c4)"></i><i style="background-color:var(--c1)"></i><i style="background-color:var(--c3)"><svg><use href="#candy-mine"/></svg></i></span>
+          Candy
+        </button>
       </div>
     </section>
 

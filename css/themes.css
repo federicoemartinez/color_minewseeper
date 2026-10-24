@@ -1,7 +1,12 @@
-/* One block per theme, keyed on <html data-theme>. Region colors are --c0 … --c7. */
+/* One block per theme, keyed on <html data-theme> (and on each theme-picker button).
+   Region colors are --c0 … --c7: red, orange, yellow, green, blue, purple, pink, teal.
+   The bare [data-theme] blocks hold variables only, so a picker button can preview another theme. */
+
+/* ---------- Flat ---------- */
 [data-theme="flat"] {
   --c0: #f4a6a6; --c1: #f7c98b; --c2: #f3e48a; --c3: #a8d8a0;
   --c4: #9fc9ee; --c5: #c3a8e8; --c6: #f2b8d8; --c7: #95d5cf;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --bg: #fbf8f3;
   --card: #fff;
   --ink: #222;
@@ -21,5 +26,128 @@
   --banner-won-ink: #123d1c;
   --banner-lost: linear-gradient(135deg, #ff8f8f, #e5484d);
   --banner-lost-ink: #fff;
+  --pv-gap: 3px; --tile-r: 5px; --tile-fx: none; --tile-gloss: none;
 }
 [data-theme="flat"] .sq.safe::after { content: "×"; color: rgba(0, 0, 0, .38); font-weight: 600; }
+
+/* ---------- Pixel: classic Minesweeper. Raised squares, pressed in once marked safe. ---------- */
+[data-theme="pixel"] {
+  --c0: #ef8a8a; --c1: #f2c06a; --c2: #e6dc5e; --c3: #8fd08a;
+  --c4: #8fb8f0; --c5: #b79cf0; --c6: #f0a0d4; --c7: #72d0c6;
+  --font: ui-monospace, "Cascadia Mono", Menlo, Consolas, "Courier New", monospace;
+  --bg: #c0c0c0;
+  --card: #c0c0c0;
+  --ink: #000;
+  --on-ink: #fff;
+  --muted: #3c3c3c;
+  --pill: #a9a9a9;
+  --focus: #000080;
+  --veil: rgba(192, 192, 192, .9);
+  --line-thin: rgba(0, 0, 0, .3);
+  --line-thick: #000;
+  --boom: #f00;
+  --heart: #e00;
+  --heart-off: #808080;
+  --banner-flawless: #ffd400;
+  --banner-flawless-ink: #000;
+  --banner-won: #8fd08a;
+  --banner-won-ink: #000;
+  --banner-lost: #e00;
+  --banner-lost-ink: #fff;
+  --bevel: inset 3px 3px 0 #fff, inset -3px -3px 0 #7b7b7b;
+  --sunken: inset 3px 3px 0 #7b7b7b, inset -3px -3px 0 #fff;
+  --pv-gap: 0; --tile-r: 0; --tile-gloss: none;
+  --tile-fx: inset 2px 2px 0 rgba(255, 255, 255, .75), inset -2px -2px 0 rgba(0, 0, 0, .4);
+}
+[data-theme="pixel"] .logo, [data-theme="pixel"] .card h2 { letter-spacing: 0; }
+[data-theme="pixel"] .card, [data-theme="pixel"] .back { border-radius: 0; box-shadow: var(--bevel); }
+[data-theme="pixel"] .pill { border-radius: 0; box-shadow: var(--sunken); background: #d4d4d4; }
+[data-theme="pixel"] .btn:not(:disabled) { border-radius: 0; background: #c0c0c0; color: #000; box-shadow: var(--bevel), 0 0 0 2px #000; }
+[data-theme="pixel"] .btn:not(:disabled):active { transform: none; box-shadow: var(--sunken), 0 0 0 2px #000; }
+[data-theme="pixel"] .btn:disabled { border-radius: 0; box-shadow: var(--sunken); }
+[data-theme="pixel"] .btn.ghost:not(:disabled) { box-shadow: none; color: var(--muted); }
+[data-theme="pixel"] .banner { border-radius: 0; box-shadow: var(--bevel), 0 0 0 2px #000; }
+[data-theme="pixel"] .board {
+  border-radius: 0;
+  border-color: #000;
+  box-shadow: 0 0 0 3px #c0c0c0, 0 0 0 6px #7b7b7b;
+}
+[data-theme="pixel"] .board.small { box-shadow: none; }
+[data-theme="pixel"] .sq { box-shadow: inset 3px 3px 0 rgba(255, 255, 255, .75), inset -3px -3px 0 rgba(0, 0, 0, .35); }
+[data-theme="pixel"] .board.small .sq { box-shadow: inset 2px 2px 0 rgba(255, 255, 255, .75), inset -2px -2px 0 rgba(0, 0, 0, .35); }
+[data-theme="pixel"] .board .sq.safe,
+[data-theme="pixel"] .board .sq.boom {
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, .28);
+  background-image: linear-gradient(rgba(0, 0, 0, .14), rgba(0, 0, 0, .14));
+}
+[data-theme="pixel"] .board .sq.boom { background-image: none; }
+.theme-opt[data-theme="pixel"] { border-radius: 0; }
+
+/* ---------- Candy: glossy rounded sweets, a cartoon bomb on a burst. ---------- */
+[data-theme="candy"] {
+  --c0: #ff8fa3; --c1: #ffc75f; --c2: #f9e45b; --c3: #9be38a;
+  --c4: #7ad3ff; --c5: #c4a2ff; --c6: #f79be6; --c7: #5fe0c8;
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --bg: linear-gradient(#fff4fb, #f1e8ff);
+  --card: #fff;
+  --ink: #4b2a5c;
+  --on-ink: #fff;
+  --muted: #8a6a94;
+  --pill: #ffe4f1;
+  --focus: #a54dff;
+  --veil: rgba(255, 244, 251, .9);
+  --line-thin: rgba(75, 42, 92, .12);
+  --line-thick: #4b2a5c;
+  --boom: #ff6b3d;
+  --heart: #ff4d6d;
+  --heart-off: #ddd3dc;
+  --banner-flawless: linear-gradient(#ffe066, #ffab2e);
+  --banner-flawless-ink: #5a2d00;
+  --banner-won: linear-gradient(#b4f19f, #5fcf74);
+  --banner-won-ink: #11421c;
+  --banner-lost: linear-gradient(#ff8fa3, #ff4d6d);
+  --banner-lost-ink: #fff;
+  --pv-gap: 3px; --tile-r: 8px;
+  --tile-fx: inset 0 -3px 0 rgba(0, 0, 0, .18), 0 1px 2px rgba(0, 0, 0, .18);
+  --tile-gloss: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 45%);
+  --candy-btn: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 3px 8px rgba(255, 77, 125, .3);
+}
+[data-theme="candy"] .card { border-radius: 24px; box-shadow: 0 2px 4px rgba(120, 40, 120, .06), 0 10px 28px rgba(160, 60, 160, .1); }
+[data-theme="candy"] .btn:not(:disabled) { border-radius: 999px; }
+[data-theme="candy"] .btn:not(:disabled):not(.alt):not(.ghost) {
+  background: linear-gradient(#ff7aa0, #ff4d7d); color: #fff; box-shadow: var(--candy-btn);
+}
+[data-theme="candy"] .btn.alt:not(:disabled) {
+  background: linear-gradient(#9ee4ff, #57c3ff); color: #123a5c; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .15), 0 3px 8px rgba(60, 160, 255, .25);
+}
+[data-theme="candy"] .btn:disabled { border-radius: 999px; }
+[data-theme="candy"] .back { border-radius: 50%; }
+[data-theme="candy"] .banner { border-radius: 22px; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .12); }
+[data-theme="candy"] .board { border-radius: 18px; box-shadow: 0 8px 24px rgba(160, 60, 160, .16); }
+/* The square shows the region color in its gutter; ::before is the glossy sweet on top. */
+[data-theme="candy"] .sq { position: relative; background-image: linear-gradient(rgba(75, 42, 92, .1), rgba(75, 42, 92, .1)); }
+[data-theme="candy"] .sq::before {
+  content: "";
+  position: absolute; inset: 8%;
+  border-radius: 30%;
+  background-color: inherit;
+  background-image: var(--tile-gloss);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18), 0 1px 2px rgba(0, 0, 0, .18);
+}
+[data-theme="candy"] .sq svg, [data-theme="candy"] .sq::after { position: relative; }
+[data-theme="candy"] .sq.safe::before {
+  background-image: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .22);
+  filter: saturate(.6) brightness(1.08);
+}
+[data-theme="candy"] .sq.safe::after {
+  content: "";
+  width: 24%; aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .12);
+}
+[data-theme="candy"] .sq.boom { background-image: none; }
+[data-theme="candy"] .sq.boom::before { content: none; }
+[data-theme="candy"] .sq.boom svg { width: 92%; height: 92%; }
+[data-theme="candy"] .hearts svg.off { filter: grayscale(1) opacity(.3); }

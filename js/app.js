@@ -209,4 +209,20 @@ $('back').addEventListener('click', () => { pause(); session = null; showHome();
 $('to-home').addEventListener('click', () => { session = null; showHome(); });
 $('share').addEventListener('click', share);
 
+// --- Theme
+const THEME_COLOR = { flat: '#fbf8f3', pixel: '#c0c0c0', candy: '#fff4fb' };
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name="theme-color"]').content = THEME_COLOR[t];
+  document.querySelector('.logo use').setAttribute('href', `#${t}-mine`);
+  for (const b of $('themes').children) b.setAttribute('aria-pressed', String(b.dataset.theme === t));
+}
+$('themes').addEventListener('click', (e) => {
+  const b = e.target.closest('.theme-opt');
+  if (!b) return;
+  applyTheme(b.dataset.theme);
+  store.saveSettings({ ...store.loadSettings(), theme: b.dataset.theme });
+});
+
+applyTheme(store.loadSettings().theme);
 showHome();
