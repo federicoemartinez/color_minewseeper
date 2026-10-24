@@ -1,4 +1,4 @@
-# Minewseeper
+# Color Minefield
 
 A daily logic puzzle in the spirit of Minesweeper: one mine per row, column and color, and every board is solvable without guessing. Daily board plus an endless Arena, three themes (Flat, Pixel, Candy). Plain HTML/CSS/JS, no dependencies, no build step. Installable and works offline.
 

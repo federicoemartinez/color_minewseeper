@@ -1,6 +1,6 @@
 {
-  "name": "Minewseeper",
-  "short_name": "Minewseeper",
+  "name": "Color Minefield",
+  "short_name": "Color Minefield",
   "description": "A daily logic puzzle: one mine per row, column and color. Never a guess.",
   "start_url": "./",
   "scope": "./",
