@@ -22,7 +22,9 @@ const tablesFor = (n) => {
   return t;
 };
 
-export function solve(n, regions) {
+// Board state plus the three rules. A rule given a `found` array lists every deduction it sees there
+// and changes nothing; without one it applies the first deduction it finds.
+function setup(n, regions) {
   const { N, base, popcount } = tablesFor(n);
   const U = 3 * n;
   // kindOf[k][s] = unit id of square s for kind k (0 row, 1 column, 2 color); units[u] = squares of unit u.
@@ -44,8 +46,6 @@ export function solve(n, regions) {
   const count = new Uint8Array(U);
   const masks = new Int32Array(3 * n * 3); // masks[(a * 3 + b) * n + (unit index within kind a)] = kind-b units touched
   const orMask = new Int32Array(1 << n);
-  let hardest = 1;
-
   const place = (m) => {
     mines.push(m);
     for (let k = 0; k < 3; k++) hasMine[kindOf[k][m]] = 1;
@@ -53,18 +53,19 @@ export function solve(n, regions) {
   };
 
   // Rule 1: a unit without a mine and exactly one candidate. Returns that square or -1.
-  const findSingle = () => {
+  const findSingle = (found) => {
     count.fill(0);
     for (let s = 0; s < N; s++) if (cand[s]) for (let k = 0; k < 3; k++) count[kindOf[k][s]]++;
     for (let u = 0; u < U; u++) {
       if (hasMine[u] || count[u] !== 1) continue;
+      if (found) { found.push({ rule: 1, units: [u] }); continue; }
       for (const s of units[u]) if (cand[s]) return s;
     }
     return -1;
   };
 
   // Rule 2: S = some A-units, C = the B-units their candidates touch; |C| == |S| clears the rest of C.
-  const confine = () => {
+  const confine = (found) => {
     masks.fill(0);
     for (let s = 0; s < N; s++) {
       if (!cand[s]) continue;
@@ -79,19 +80,27 @@ export function solve(n, regions) {
       for (let b = 0; b < 3; b++) {
         if (a === b) continue;
         const base = (a * 3 + b) * n;
+        const listed = []; // with `found`, only subsets with no smaller listed subset (those come first: ascending walk)
         // Ascending walk over the non-empty subsets of the open A-units; orMask[sub] extends the one without its lowest bit.
         for (let sub = (0 - open) & open; sub !== 0; sub = (sub - open) & open) {
           const low = sub & -sub;
           orMask[sub] = orMask[sub ^ low] | masks[base + 31 - Math.clz32(low)];
           if (sub === full || popcount[orMask[sub]] !== popcount[sub]) continue;
+          if (found && listed.some((m) => (m & sub) === m)) continue;
           let cleared = false;
           for (let v = 0; v < n; v++) {
             if (!((orMask[sub] >> v) & 1)) continue;
             for (const s of units[b * n + v]) {
-              if (cand[s] && !((sub >> (kindOf[a][s] - a * n)) & 1)) { cand[s] = 0; cleared = true; }
+              if (cand[s] && !((sub >> (kindOf[a][s] - a * n)) & 1)) { if (!found) cand[s] = 0; cleared = true; }
             }
           }
-          if (cleared) return true;
+          if (cleared && !found) return true;
+          if (cleared) {
+            listed.push(sub);
+            const us = [];
+            for (let v = 0; v < n; v++) if ((sub >> v) & 1) us.push(a * n + v);
+            found.push({ rule: 2, units: us, across: b });
+          }
         }
       }
     }
@@ -99,7 +108,7 @@ export function solve(n, regions) {
   };
 
   // Rule 3: a mine on c that leaves another mine-less unit with no candidates is impossible.
-  const lookahead = () => {
+  const lookahead = (found) => {
     let cleared = false;
     for (let c = 0; c < N; c++) {
       if (!cand[c]) continue;
@@ -108,12 +117,18 @@ export function solve(n, regions) {
         if (hasMine[u] || u === u0 || u === u1 || u === u2) continue;
         let alive = false;
         for (const s of units[u]) if (cand[s] && !ruled[c * N + s]) { alive = true; break; }
-        if (!alive) { cand[c] = 0; cleared = true; break; }
+        if (!alive) { if (found) found.push({ rule: 3, square: c }); else cand[c] = 0; cleared = true; break; }
       }
     }
     return cleared;
   };
 
+  return { N, units, cand, mines, place, findSingle, confine, lookahead };
+}
+
+export function solve(n, regions) {
+  const { mines, place, findSingle, confine, lookahead } = setup(n, regions);
+  let hardest = 1;
   while (mines.length < n) {
     const single = findSingle();
     if (single >= 0) { place(single); continue; }
@@ -122,4 +137,21 @@ export function solve(n, regions) {
     return { solved: false };
   }
   return { solved: true, hardest, mines: mines.sort((x, y) => x - y) };
+}
+
+/** Every deduction the player could make next from their marks, simplest rule first. Steps are
+ *  { rule: 1, units: [u] } (u's only spot), { rule: 2, units, across: kind } (units confined to as many
+ *  units of `across`: 0 rows, 1 columns, 2 colors; fewest units first) or { rule: 3, square } (a mine there leaves a unit empty).
+ *  Marks must be true (a wrong flag already shows as 'safe'), as in game.js. */
+export function hints(n, regions, marks) {
+  const st = setup(n, regions);
+  marks.forEach((m, s) => { if (m === 'mine') st.place(s); });
+  marks.forEach((m, s) => { if (m === 'safe') st.cand[s] = 0; });
+  const found = [];
+  st.findSingle(found);
+  st.confine(found);
+  st.lookahead(found);
+  // A rule-2 step over more than half the units has a smaller twin (the remaining units of both kinds), so drop it.
+  return found.filter((h) => h.rule !== 2 || h.units.length * 2 <= n)
+    .sort((x, y) => x.rule - y.rule || (x.units?.length ?? 0) - (y.units?.length ?? 0));
 }

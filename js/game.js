@@ -1,3 +1,5 @@
+import { hints } from './solver.js';
+
 /** @typedef {{ n: number, regions: number[], hidden: number[], marks: ('unknown'|'safe'|'mine'|'boom')[],
  *    lives: number, status: 'playing'|'won'|'lost', lostBy: null|'boom'|'lives', elapsedMs: number }} Game
  *  Plain JSON, with no Sets or classes, so a daily can be saved with JSON.stringify. */
@@ -45,3 +47,29 @@ export const minesFound = (game) => game.marks.filter((m) => m === 'mine').lengt
 
 /** @param {Game} game @returns {boolean} */
 export const isFlawless = (game) => game.status === 'won' && game.lives === LIVES;
+
+const KIND = ['row', 'column', 'color'];
+
+/** The k-th of the deductions available now (wrapping), as a question that does not give the answer
+ *  plus the squares it is about; null when there is none. Costs nothing: see takeHint. */
+export const hintFor = (game, k) => {
+  const steps = hints(game.n, game.regions, game.marks);
+  if (steps.length === 0) return null;
+  const h = steps[k % steps.length], n = game.n;
+  const kind = (u) => Math.floor(u / n);
+  const squaresOf = (u) => [...Array(n * n).keys()].filter((s) =>
+    [Math.floor(s / n), n + (s % n), 2 * n + game.regions[s]][kind(u)] === u);
+  if (h.rule === 3) return { text: 'What would happen if there were a mine here?', squares: [h.square] };
+  const what = KIND[kind(h.units[0])];
+  const squares = h.units.flatMap(squaresOf);
+  if (h.rule === 1) return { text: `Where can this ${what}'s mine go?`, squares };
+  const many = h.units.length > 1;
+  return { text: `Which ${KIND[h.across]}s can ${many ? `these ${what}s' mines` : `this ${what}'s mine`} be in?`, squares };
+};
+
+/** Pays a life for a hint. Only allowed while more than one life is left. Mutates `game`. */
+export const takeHint = (game) => {
+  if (game.status !== 'playing' || game.lives <= 1) return false;
+  game.lives--;
+  return true;
+};

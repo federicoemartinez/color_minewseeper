@@ -61,6 +61,7 @@
 }
 [data-theme="pixel"] .logo, [data-theme="pixel"] .card h2 { letter-spacing: 0; }
 [data-theme="pixel"] .card, [data-theme="pixel"] .back { border-radius: 0; box-shadow: var(--bevel); }
+[data-theme="pixel"] .hint-btn { border-radius: 0; box-shadow: var(--bevel); }
 [data-theme="pixel"] .pill { border-radius: 0; box-shadow: var(--sunken); background: #d4d4d4; }
 [data-theme="pixel"] .btn:not(:disabled) { border-radius: 0; background: #c0c0c0; color: #000; box-shadow: var(--bevel), 0 0 0 2px #000; }
 [data-theme="pixel"] .btn:not(:disabled):active { transform: none; box-shadow: var(--sunken), 0 0 0 2px #000; }

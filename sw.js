@@ -1,5 +1,5 @@
 // Bump CACHE on every deploy so installed clients pick up new files.
-const CACHE = 'mws-v1';
+const CACHE = 'mws-v2';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
   './css/base.css', './css/themes.css',

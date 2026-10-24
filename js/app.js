@@ -1,6 +1,6 @@
 import { fnv1a, randomSeed } from './rng.js';
 import { BOARD_SIZE, generateBoard } from './generator.js';
-import { LIVES, createGame, mark, minesFound, isFlawless } from './game.js';
+import { LIVES, createGame, mark, minesFound, isFlawless, hintFor, takeHint } from './game.js';
 import { createTapHandler } from './input.js';
 import { dateKey, recordResult, currentStreak } from './stats.js';
 import { createStore } from './storage.js';
@@ -12,7 +12,8 @@ const $ = (id) => document.getElementById(id);
 const store = createStore();
 const theme = () => document.documentElement.dataset.theme;
 
-/** @type {null | { mode: 'daily'|'arena', date: string, game: import('./game.js').Game, tap: (i: number) => void }} */
+/** @type {null | { mode: 'daily'|'arena', date: string, game: import('./game.js').Game, tap: (i: number) => void,
+ *    hint: null | { text: string, squares: number[] }, hintsAsked: number }} hintsAsked counts since the last mark. */
 let session = null;
 let runningSince = null, ticker = null;
 
@@ -125,6 +126,7 @@ async function startArena() {
 function startPlay(s) {
   stopClock();
   s.tap = createTapHandler({ onTap: (i) => act(s, i, 'safe'), onDoubleTap: (i) => act(s, i, 'mine') });
+  s.hint = null; s.hintsAsked = 0;
   session = s;
   $('mode-label').textContent = modeLabel(s);
   renderPlay();
@@ -135,6 +137,11 @@ function startPlay(s) {
 function renderPlay() {
   const g = session.game;
   renderBoard($('board'), g, theme());
+  for (const i of session.hint?.squares ?? []) $('board').children[i].classList.add('hl');
+  $('tip').textContent = session.hint?.text ?? 'Tap = safe · Double tap = mine';
+  $('tip').classList.toggle('ask', session.hint !== null);
+  $('hint-btn').disabled = g.lives <= 1;
+  $('hint-btn').title = g.lives > 1 ? 'Hint: costs a life' : 'No hints on your last life';
   drawHearts($('hearts'), g.lives);
   $('found').textContent = `🚩 ${minesFound(g)} / ${g.hidden.length}`;
   drawTimer();
@@ -144,10 +151,21 @@ function act(s, i, kind) {
   if (s !== session || s.game.status !== 'playing') return; // a tap left pending by Back or a finished game
   startClock();
   if (mark(s.game, i, kind) === 'ignored') return;
+  s.hint = null; s.hintsAsked = 0;
   const over = s.game.status !== 'playing';
   if (over) stopClock(); else syncClock();
   saveDaily();
   if (over) finish(s); else renderPlay();
+}
+
+// Each hint asked without marking anything in between shows the next available deduction.
+function askHint() {
+  const s = session, h = s && hintFor(s.game, s.hintsAsked);
+  if (!h || s.game.lives <= 1 || !confirm('A hint costs a life. Use one?')) return;
+  takeHint(s.game);
+  s.hint = h; s.hintsAsked++;
+  saveDaily();
+  renderPlay();
 }
 
 function finish(s) {
@@ -229,6 +247,7 @@ addEventListener('popstate', goHome);
 $('back').addEventListener('click', leave);
 $('to-home').addEventListener('click', leave);
 $('share').addEventListener('click', share);
+$('hint-btn').addEventListener('click', askHint);
 
 // --- Theme
 const THEME_COLOR = { flat: '#fbf8f3', pixel: '#c0c0c0', candy: '#fff4fb' };

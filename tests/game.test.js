@@ -1,7 +1,7 @@
 // tests/game.test.js. The mines of EASY_6 are [0, 9, 13, 23, 26, 34].
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, mark, minesFound, isFlawless } from '../js/game.js';
+import { createGame, mark, minesFound, isFlawless, hintFor, takeHint } from '../js/game.js';
 import { EASY_6 as board } from './fixtures.js';
 
 test('a new game', () => {
@@ -52,4 +52,19 @@ test('marks after the game ended are ignored', () => {
 test('a game survives a JSON round trip (saved dailies)', () => {
   const g = JSON.parse(JSON.stringify(createGame(board)));
   assert.equal(mark(g, 0, 'mine'), 'flag');
+});
+
+test('a hint costs a life and needs two', () => {
+  const g = createGame(board);
+  assert.equal(takeHint(g), true); assert.equal(g.lives, 2);
+  assert.equal(takeHint(g), true); assert.equal(g.lives, 1);
+  assert.equal(takeHint(g), false); assert.equal(g.lives, 1);
+});
+test('hintFor asks without answering and cycles through the steps', () => {
+  const g = createGame(board);
+  const first = hintFor(g, 0);
+  assert.equal(first.text, "Where can this color's mine go?"); // EASY_6's color 1 is the single square 34
+  assert.deepEqual(first.squares, [34]);
+  assert.notDeepEqual(hintFor(g, 1), first);
+  assert.ok(hintFor(g, 1).text.endsWith('?'));
 });
