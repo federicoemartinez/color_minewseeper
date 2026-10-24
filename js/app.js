@@ -12,6 +12,8 @@ import { playSound, unlockAudio } from './sound.js';
 const $ = (id) => document.getElementById(id);
 const store = createStore();
 const theme = () => document.documentElement.dataset.theme;
+// Inside a portal's iframe (CrazyGames): our URL is their CDN's, and an offline cache there would pin old builds.
+const embedded = window.top !== window.self;
 
 /** @type {null | { mode: 'daily'|'arena', date: string, game: import('./game.js').Game, tap: (i: number) => void,
  *    hint: null | { text: string, squares: number[] }, hintsAsked: number }} hintsAsked counts since the last mark. */
@@ -242,7 +244,7 @@ async function share() {
   const g = session.game;
   const text = shareText({
     mode: session.mode, date: session.date, won: g.status === 'won', lostBy: g.lostBy,
-    livesLeft: g.lives, timeMs: g.elapsedMs, url: location.origin + location.pathname,
+    livesLeft: g.lives, timeMs: g.elapsedMs, url: embedded ? undefined : location.origin + location.pathname,
   });
   if (navigator.share) {
     try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; }
@@ -330,4 +332,4 @@ applyTheme(store.loadSettings().theme);
 drawSoundToggle();
 if (store.loadSettings().tutorialSeen) showHome(); else showTutorial();
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if ('serviceWorker' in navigator && !embedded) navigator.serviceWorker.register('./sw.js');
