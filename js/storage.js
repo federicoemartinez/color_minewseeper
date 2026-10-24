@@ -48,6 +48,7 @@ export function createStore(storage = defaultStorage()) {
       return {
         theme: isObj(s) && THEMES.includes(s.theme) ? s.theme : 'flat',
         tutorialSeen: isObj(s) && s.tutorialSeen === true,
+        sound: !(isObj(s) && s.sound === false), // on unless turned off
       };
     },
     saveSettings: (s) => write('mws.settings', s),

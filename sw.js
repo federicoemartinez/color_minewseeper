@@ -1,10 +1,10 @@
 // Bump CACHE on every deploy so installed clients pick up new files.
-const CACHE = 'mws-v2';
+const CACHE = 'mws-v3';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
   './css/base.css', './css/themes.css',
   './js/app.js', './js/board-view.js', './js/game.js', './js/generator.js', './js/grid.js', './js/input.js',
-  './js/rng.js', './js/share.js', './js/solver.js', './js/stats.js', './js/storage.js', './js/tutorial.js',
+  './js/rng.js', './js/share.js', './js/solver.js', './js/sound.js', './js/stats.js', './js/storage.js', './js/tutorial.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
 

@@ -7,6 +7,7 @@ import { createStore } from './storage.js';
 import { formatTime, shareText } from './share.js';
 import { renderBoard } from './board-view.js';
 import { openTutorial } from './tutorial.js';
+import { playSound, unlockAudio } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
 const store = createStore();
@@ -47,6 +48,36 @@ function drawHearts(el, lives) {
   el.innerHTML = Array.from({ length: LIVES }, (_, k) =>
     `<svg class="${k < lives ? 'on' : 'off'}" aria-hidden="true"><use href="#${theme()}-heart"/></svg>`).join('');
   el.setAttribute('aria-label', `${lives} of ${LIVES} lives left`);
+}
+
+// --- Sound and motion. Each theme's css/themes.css keyframes decide what an fx-* class looks like.
+const sfx = (moment) => { if (store.loadSettings().sound) playSound(theme(), moment); };
+function fx(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth; // restart the animation if the class was still there
+  el.classList.add(cls);
+}
+const loseHeart = (g) => fx($('hearts').children[g.lives], 'fx-lose');
+function confetti() {
+  const css = getComputedStyle(document.documentElement), layer = document.createElement('div');
+  layer.className = 'confetti';
+  layer.setAttribute('aria-hidden', 'true');
+  for (let k = 0; k < 70; k++) {
+    const bit = document.createElement('i');
+    bit.style.left = `${Math.random() * 100}%`;
+    bit.style.background = css.getPropertyValue(`--c${k % 8}`);
+    bit.style.animationDelay = `${Math.random() * .5}s`;
+    bit.style.setProperty('--dx', `${(Math.random() - .5) * 200}px`);
+    bit.style.setProperty('--spin', `${(Math.random() - .5) * 1440}deg`);
+    layer.append(bit);
+  }
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 3500);
+}
+function drawSoundToggle() {
+  const on = store.loadSettings().sound;
+  $('sound').textContent = on ? '🔊' : '🔇';
+  $('sound').setAttribute('aria-pressed', String(on));
 }
 
 // --- Clock: runs from the first mark, pauses while the page is hidden, lives in game.elapsedMs.
@@ -147,25 +178,35 @@ function renderPlay() {
   drawTimer();
 }
 
+const MOVE_SOUND = { safe: 'tap', flag: 'flag', won: 'flag', 'wrong-flag': 'wrong', 'out-of-lives': 'wrong', boom: 'boom' };
+const MOVE_FX = { safe: 'fx-tap', flag: 'fx-flag', won: 'fx-flag', 'wrong-flag': 'fx-wrong', 'out-of-lives': 'fx-wrong' };
+
 function act(s, i, kind) {
   if (s !== session || s.game.status !== 'playing') return; // a tap left pending by Back or a finished game
   startClock();
-  if (mark(s.game, i, kind) === 'ignored') return;
+  const move = mark(s.game, i, kind);
+  if (move === 'ignored') return;
   s.hint = null; s.hintsAsked = 0;
   const over = s.game.status !== 'playing';
   if (over) stopClock(); else syncClock();
   saveDaily();
-  if (over) finish(s); else renderPlay();
+  renderPlay();
+  sfx(MOVE_SOUND[move]);
+  if (move === 'boom') fx($('board'), 'fx-boom'); else fx($('board').children[i], MOVE_FX[move]);
+  if (move === 'wrong-flag' || move === 'out-of-lives') loseHeart(s.game);
+  if (over) finish(s);
 }
 
 // Each hint asked without marking anything in between shows the next available deduction.
 function askHint() {
   const s = session, h = s && hintFor(s.game, s.hintsAsked);
-  if (!h || s.game.lives <= 1 || !confirm('A hint costs a life. Use one?')) return;
+  if (!h || s.game.status !== 'playing' || s.game.lives <= 1 || !confirm('A hint costs a life. Use one?')) return;
   takeHint(s.game);
   s.hint = h; s.hintsAsked++;
   saveDaily();
   renderPlay();
+  sfx('wrong');
+  loseHeart(s.game);
 }
 
 function finish(s) {
@@ -175,7 +216,8 @@ function finish(s) {
     mode: s.mode, date: s.date, won: g.status === 'won', flawless: isFlawless(g), timeMs: g.elapsedMs,
   });
   store.saveStats(stats);
-  showResult(s, stats);
+  // A beat to see the last move land before the result screen; Back in the meantime skips it.
+  setTimeout(() => { if (s === session) showResult(s, stats); }, 900);
 }
 
 // --- Result
@@ -191,6 +233,9 @@ function showResult(s, stats) {
   $('result-streak').textContent = `🔥 ${currentStreak(stats, dateKey())}`;
   $('share').textContent = 'Share result';
   show('result');
+  fx($('banner'), 'fx-banner');
+  if (won) sfx(flawless ? 'flawless' : 'won');
+  if (flawless) confetti();
 }
 
 async function share() {
@@ -247,6 +292,15 @@ addEventListener('popstate', goHome);
 $('back').addEventListener('click', leave);
 $('to-home').addEventListener('click', leave);
 $('share').addEventListener('click', share);
+$('sound').addEventListener('click', () => {
+  const settings = store.loadSettings();
+  store.saveSettings({ ...settings, sound: !settings.sound });
+  drawSoundToggle();
+});
+// Browsers start audio only inside a user gesture: a mouse press, or a touch or pen lift.
+document.addEventListener('pointerdown', unlockAudio);
+document.addEventListener('pointerup', unlockAudio);
+document.addEventListener('keydown', unlockAudio);
 $('hint-btn').addEventListener('click', askHint);
 
 // --- Theme
@@ -273,6 +327,7 @@ function showTutorial() {
 $('how-to').addEventListener('click', showTutorial);
 
 applyTheme(store.loadSettings().theme);
+drawSoundToggle();
 if (store.loadSettings().tutorialSeen) showHome(); else showTutorial();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');

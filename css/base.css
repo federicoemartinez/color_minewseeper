@@ -99,10 +99,10 @@ button { font: inherit; color: inherit; }
 
 /* Play */
 .bar {
-  display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 44px 1fr auto 44px; align-items: center; gap: 8px;
   font-weight: 700;
 }
-.back {
+.back { /* also the sound toggle, .back.snd */
   width: 44px; height: 44px;
   border: 0; border-radius: 12px;
   background: var(--card);
@@ -207,3 +207,12 @@ button { font: inherit; color: inherit; }
 .tut-text { text-align: center; font-size: 18px; line-height: 1.45; min-height: 5.8em; }
 .tut-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tut-nav .btn:only-child { grid-column: 2; }
+
+/* Motion: app.js adds an fx-* class for a moment; each theme's keyframes live in themes.css. */
+.confetti { position: fixed; inset: 0; z-index: 20; overflow: hidden; pointer-events: none; }
+.confetti i { position: absolute; top: -20px; width: 10px; height: 14px; }
+@keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--spin)); } }
+@media (prefers-reduced-motion: reduce) {
+  [class*="fx-"], [class*="fx-"] * { animation: none !important; }
+  .confetti { display: none; }
+}

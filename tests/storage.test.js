@@ -14,20 +14,27 @@ test('defaults when empty', () => {
   const st = createStore(fakeStorage());
   assert.deepEqual(st.loadStats(), emptyStats());
   assert.equal(st.loadDaily(), null);
-  assert.deepEqual(st.loadSettings(), { theme: 'flat', tutorialSeen: false });
+  assert.deepEqual(st.loadSettings(), { theme: 'flat', tutorialSeen: false, sound: true });
 });
 test('round trip', () => {
   const st = createStore(fakeStorage());
   const daily = { date: '2026-10-24', game: { n: 6, marks: ['unknown'] } };
-  st.saveDaily(daily); st.saveSettings({ theme: 'pixel', tutorialSeen: true });
-  assert.deepEqual(st.loadDaily(), daily); assert.deepEqual(st.loadSettings(), { theme: 'pixel', tutorialSeen: true });
+  st.saveDaily(daily); st.saveSettings({ theme: 'pixel', tutorialSeen: true, sound: false });
+  assert.deepEqual(st.loadDaily(), daily); assert.deepEqual(st.loadSettings(), { theme: 'pixel', tutorialSeen: true, sound: false });
 });
 test('corrupted data falls back to defaults', () => {
   const fs = fakeStorage();
   fs.setItem('mws.stats', '{oops'); fs.setItem('mws.daily', '"nope"'); fs.setItem('mws.settings', '{"theme":"neon"}');
   const st = createStore(fs);
   assert.deepEqual(st.loadStats(), emptyStats()); assert.equal(st.loadDaily(), null);
-  assert.deepEqual(st.loadSettings(), { theme: 'flat', tutorialSeen: false });
+  assert.deepEqual(st.loadSettings(), { theme: 'flat', tutorialSeen: false, sound: true });
+});
+test('sound is on unless saved as off', () => {
+  const fs = fakeStorage();
+  fs.setItem('mws.settings', '{"theme":"pixel","sound":"no"}');
+  assert.equal(createStore(fs).loadSettings().sound, true);
+  fs.setItem('mws.settings', '{"sound":false}');
+  assert.equal(createStore(fs).loadSettings().sound, false);
 });
 test('partial stats are filled in from defaults', () => {
   const fs = fakeStorage();
@@ -49,8 +56,8 @@ test('reads see the latest save even when setItem fails but getItem works', () =
   const fs = fakeStorage();
   fs.setItem('mws.settings', '{"theme":"flat","tutorialSeen":false}');
   const st = createStore({ ...fs, setItem: deny });
-  st.saveSettings({ theme: 'pixel', tutorialSeen: true });
-  assert.deepEqual(st.loadSettings(), { theme: 'pixel', tutorialSeen: true });
+  st.saveSettings({ theme: 'pixel', tutorialSeen: true, sound: true });
+  assert.deepEqual(st.loadSettings(), { theme: 'pixel', tutorialSeen: true, sound: true });
 });
 test('saving an unserializable value does not throw', () => {
   const st = createStore(fakeStorage());
