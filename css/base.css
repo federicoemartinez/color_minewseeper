@@ -198,16 +198,12 @@ button { font: inherit; color: inherit; }
   font-size: 20px; font-weight: 800;
 }
 
-/* Tutorial */
-.tut-dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
-.tut-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--heart-off); }
-.tut-dots i.on { background: var(--ink); }
-.tut-hearts { justify-content: center; height: 24px; }  /* always there, so the board does not jump between pages */
-.tut-board { --board-w: min(100vw - 72px, 300px, 100dvh - 295px); }  /* 295px ≈ dots + hearts + text + nav + padding */
+/* Hints, and the guide's squares to play */
 .sq.hl { outline: 3px dashed var(--ink); outline-offset: -6px; }
-.tut-text { text-align: center; font-size: 18px; line-height: 1.45; min-height: 5.8em; }
-.tut-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.tut-nav .btn:only-child { grid-column: 2; }
+/* The guide talks in up to 3 lines, so its board gives up the room. 270px ≈ #play's 190px + 80px of text. */
+#play.guide .board { --board-w: min(100vw - 32px, 480px, 100dvh - 270px); }
+#play.guide .sq.hl { animation: hl-pulse .9s ease-in-out infinite alternate; }
+@keyframes hl-pulse { to { outline-offset: -3px; outline-color: var(--focus); } }
 
 /* Motion: app.js adds an fx-* class for a moment; each theme's keyframes live in themes.css. */
 .confetti { position: fixed; inset: 0; z-index: 20; overflow: hidden; pointer-events: none; }

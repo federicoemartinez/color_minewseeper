@@ -6,7 +6,7 @@ import { dateKey, recordResult, currentStreak } from './stats.js';
 import { createStore } from './storage.js';
 import { formatTime, shareText } from './share.js';
 import { renderBoard } from './board-view.js';
-import { openTutorial } from './tutorial.js';
+import { GUIDE_BOARD, STEPS, guideStep, guideAllows, guideTip } from './guide.js';
 import { playSound, unlockAudio } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
@@ -15,7 +15,7 @@ const theme = () => document.documentElement.dataset.theme;
 // Inside a portal's iframe (CrazyGames): our URL is their CDN's, and an offline cache there would pin old builds.
 const embedded = window.top !== window.self;
 
-/** @type {null | { mode: 'daily'|'arena', date: string, game: import('./game.js').Game, tap: (i: number) => void,
+/** @type {null | { mode: 'daily'|'arena'|'guide', date: string, game: import('./game.js').Game, tap: (i: number) => void,
  *    hint: null | { text: string, squares: number[] }, hintsAsked: number }} hintsAsked counts since the last mark. */
 let session = null;
 let runningSince = null, ticker = null;
@@ -43,7 +43,9 @@ const dayLabel = (key, opts = { month: 'short', day: 'numeric' }) => {
   const [y, m, d] = key.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString(undefined, opts);
 };
-const modeLabel = (s) => (s.mode === 'daily' ? `Daily · ${dayLabel(s.date)}` : 'Arena');
+// Mouse players click: same words, the mouse's verb.
+const say = (text) => (matchMedia('(pointer: coarse)').matches ? text : text.replace(/tap/g, 'click').replace(/Tap/g, 'Click'));
+const modeLabel = (s) => ({ daily: `Daily · ${dayLabel(s.date)}`, arena: 'Arena', guide: 'How to play' })[s.mode];
 const started = (g) => g.marks.some((m) => m !== 'unknown');
 
 function drawHearts(el, lives) {
@@ -152,6 +154,12 @@ async function startDaily() {
   startPlay({ mode: 'daily', date: today, game });
 }
 
+// The first visit lands here; Back skips it (portals want onboarding skippable). How to play replays it.
+function startGuide() {
+  $('guide-go').textContent = store.loadSettings().tutorialSeen ? 'Play a board' : 'Play your first board';
+  startPlay({ mode: 'guide', date: dateKey(), game: createGame(GUIDE_BOARD) });
+}
+
 async function startArena() {
   startPlay({ mode: 'arena', date: dateKey(), game: createGame(await getBoard(BOARD_SIZE, randomSeed())) });
 }
@@ -161,6 +169,7 @@ function startPlay(s) {
   s.tap = createTapHandler({ onTap: (i) => act(s, i, 'safe'), onDoubleTap: (i) => act(s, i, 'mine') });
   s.hint = null; s.hintsAsked = 0;
   session = s;
+  $('play').classList.toggle('guide', s.mode === 'guide');
   $('mode-label').textContent = modeLabel(s);
   renderPlay();
   show('play');
@@ -168,13 +177,18 @@ function startPlay(s) {
 }
 
 function renderPlay() {
-  const g = session.game;
+  const g = session.game, guide = session.mode === 'guide';
+  const tip = guide && !session.hint ? guideTip(g) : session.hint;
   renderBoard($('board'), g, theme());
-  for (const i of session.hint?.squares ?? []) $('board').children[i].classList.add('hl');
-  $('tip').textContent = session.hint?.text ?? 'Tap = safe · Double tap = mine';
-  $('tip').classList.toggle('ask', session.hint !== null);
-  $('hint-btn').disabled = g.lives <= 1;
-  $('hint-btn').title = g.lives > 1 ? 'Hint: costs a life' : 'No hints on your last life';
+  for (const i of tip?.squares ?? []) $('board').children[i].classList.add('hl');
+  $('tip').textContent = say(tip?.text ?? 'Tap = safe · Double tap = mine');
+  $('tip').classList.toggle('ask', tip !== null);
+  $('hint-btn').hidden = guide && guideStep(g) < STEPS.length;
+  $('hint-btn').disabled = !guide && g.lives <= 1;
+  $('hint-btn').title = guide ? 'Hint' : g.lives > 1 ? 'Hint: costs a life' : 'No hints on your last life';
+  $('timer').hidden = guide;
+  $('guide-go').hidden = !(guide && g.status === 'won');
+  $('play').querySelector('.sub').hidden = guide && g.status === 'won'; // makes room for the way out
   drawHearts($('hearts'), g.lives);
   $('found').textContent = `🚩 ${minesFound(g)} / ${g.hidden.length}`;
   drawTimer();
@@ -185,6 +199,10 @@ const MOVE_FX = { safe: 'fx-tap', flag: 'fx-flag', won: 'fx-flag', 'wrong-flag':
 
 function act(s, i, kind) {
   if (s !== session || s.game.status !== 'playing') return; // a tap left pending by Back or a finished game
+  if (s.mode === 'guide' && s.game.marks[i] === 'unknown' && !guideAllows(s.game, i, kind)) {
+    sfx('wrong'); fx($('board').children[i], 'fx-wrong'); // free in the guide: the move just bounces off
+    return;
+  }
   startClock();
   const move = mark(s.game, i, kind);
   if (move === 'ignored') return;
@@ -202,16 +220,18 @@ function act(s, i, kind) {
 // Each hint asked without marking anything in between shows the next available deduction.
 function askHint() {
   const s = session, h = s && hintFor(s.game, s.hintsAsked);
-  if (!h || s.game.status !== 'playing' || s.game.lives <= 1 || !confirm('A hint costs a life. Use one?')) return;
-  takeHint(s.game);
+  if (!h || s.game.status !== 'playing') return;
+  const free = s.mode === 'guide';
+  if (!free && (s.game.lives <= 1 || !confirm('A hint costs a life. Use one?'))) return;
+  if (!free) takeHint(s.game);
   s.hint = h; s.hintsAsked++;
   saveDaily();
   renderPlay();
-  sfx('wrong');
-  loseHeart(s.game);
+  if (!free) { sfx('wrong'); loseHeart(s.game); }
 }
 
 function finish(s) {
+  if (s.mode === 'guide') return sfx('won'); // no stats; renderPlay already showed the way out
   const g = s.game;
   // For the daily, s.date is the saved record's date, even if the game ends after midnight.
   const stats = recordResult(store.loadStats(), {
@@ -285,7 +305,7 @@ $('arena-play').addEventListener('click', startArena);
 $('again').addEventListener('click', startArena);
 function goHome() {
   pushed = false;
-  if (!$('tutorial').hidden) markTutorialSeen(); // system Back on the tutorial counts as Skip/Done
+  if (session?.mode === 'guide') markTutorialSeen(); // system Back out of the guide counts as done
   pause(); session = null;
   showHome();
 }
@@ -322,14 +342,11 @@ $('themes').addEventListener('click', (e) => {
 
 // --- Tutorial
 const markTutorialSeen = () => store.saveSettings({ ...store.loadSettings(), tutorialSeen: true });
-function showTutorial() {
-  show('tutorial');
-  openTutorial(() => { markTutorialSeen(); leave(); });
-}
-$('how-to').addEventListener('click', showTutorial);
+$('how-to').addEventListener('click', startGuide);
+$('guide-go').addEventListener('click', () => { markTutorialSeen(); startArena(); });
 
 applyTheme(store.loadSettings().theme);
 drawSoundToggle();
-if (store.loadSettings().tutorialSeen) showHome(); else showTutorial();
+if (store.loadSettings().tutorialSeen) showHome(); else startGuide();
 
 if ('serviceWorker' in navigator && !embedded) navigator.serviceWorker.register('./sw.js');
