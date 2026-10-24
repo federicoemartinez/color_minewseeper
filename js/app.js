@@ -237,3 +237,5 @@ $('how-to').addEventListener('click', showTutorial);
 
 applyTheme(store.loadSettings().theme);
 if (store.loadSettings().tutorialSeen) showHome(); else showTutorial();
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
