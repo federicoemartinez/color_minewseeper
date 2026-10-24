@@ -6,6 +6,7 @@ import { dateKey, recordResult, currentStreak } from './stats.js';
 import { createStore } from './storage.js';
 import { formatTime, shareText } from './share.js';
 import { renderBoard } from './board-view.js';
+import { openTutorial } from './tutorial.js';
 
 const $ = (id) => document.getElementById(id);
 const store = createStore();
@@ -224,5 +225,15 @@ $('themes').addEventListener('click', (e) => {
   store.saveSettings({ ...store.loadSettings(), theme: b.dataset.theme });
 });
 
+// --- Tutorial
+function showTutorial() {
+  show('tutorial');
+  openTutorial(() => {
+    store.saveSettings({ ...store.loadSettings(), tutorialSeen: true });
+    showHome();
+  });
+}
+$('how-to').addEventListener('click', showTutorial);
+
 applyTheme(store.loadSettings().theme);
-showHome();
+if (store.loadSettings().tutorialSeen) showHome(); else showTutorial();

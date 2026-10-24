@@ -182,3 +182,14 @@ button { font: inherit; color: inherit; }
   background: var(--veil);
   font-size: 20px; font-weight: 800;
 }
+
+/* Tutorial */
+.tut-dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+.tut-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--heart-off); }
+.tut-dots i.on { background: var(--ink); }
+.tut-hearts { justify-content: center; height: 24px; }  /* always there, so the board does not jump between pages */
+.tut-board { --board-w: min(100vw - 72px, 300px); }
+.tut-board .sq.hl { outline: 3px dashed var(--ink); outline-offset: -6px; }
+.tut-text { text-align: center; font-size: 18px; line-height: 1.45; min-height: 5.8em; }
+.tut-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tut-nav .btn:only-child { grid-column: 2; }
