@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mulberry32, fnv1a } from '../js/rng.js';
 import { neighbors8 } from '../js/grid.js';
 import { solve } from '../js/solver.js';
-import { placeMines, paintRegions, rebalance, generateBoard, FREE_SHARE, MIN_REGION, MAX_REGION } from '../js/generator.js';
+import { placeMines, paintRegions, rebalance, generateBoard, FREE_SHARE, MIN_REGIONS, MAX_REGION } from '../js/generator.js';
 import { assertValidLayout, regionSizes } from './helpers.js';
 
 const sorted = (a) => [...a].sort((x, y) => x - y);
@@ -43,12 +43,12 @@ test('rebalance: sizes within limits, still solvable, input untouched', () => {
     const regions = paintRegions(8, mines, rand, FREE_SHARE);
     if (!regions || !solve(8, regions).solved) continue;
     const before = [...regions];
-    const fixed = rebalance(8, mines, regions, rand, MIN_REGION, MAX_REGION);
+    const fixed = rebalance(8, mines, regions, rand, 2, MAX_REGION);
     assert.deepEqual(regions, before);
     if (!fixed) continue;
     cleaned++;
     assertValidLayout(8, fixed, mines);
-    assert.ok(regionSizes(8, fixed).every((s) => s >= MIN_REGION && s <= MAX_REGION));
+    assert.ok(regionSizes(8, fixed).every((s) => s >= 2 && s <= MAX_REGION));
     assert.deepEqual(solve(8, fixed).mines, sorted(mines));
   }
   assert.equal(cleaned, 3);
@@ -57,16 +57,21 @@ test('generateBoard: valid, solvable, within limits, repeatable', () => {
   for (const seed of [1, 2, 3, 3698842276]) {
     const board = generateBoard(8, seed);
     assertValidLayout(8, board.regions, board.mines);
-    assert.ok(regionSizes(8, board.regions).every((s) => s >= MIN_REGION && s <= MAX_REGION));
+    assert.ok(regionSizes(8, board.regions).every((s) => s >= MIN_REGIONS[0] && s <= MAX_REGION));
     assert.deepEqual(solve(8, board.regions), { solved: true, hardest: board.hardest, mines: board.mines });
     assert.deepEqual(generateBoard(8, seed), board);
   }
 });
+test('generateBoard: every minimum color size shows up across seeds', () => {
+  const smallest = new Set();
+  for (let seed = 1; seed <= 20; seed++) smallest.add(Math.min(...regionSizes(8, generateBoard(8, seed).regions)));
+  for (const min of MIN_REGIONS) assert.ok(smallest.has(min), `no board with smallest color ${min}`);
+});
 test('the 2026-10-24 daily board is pinned (a generator change must be deliberate)', () => {
   assert.deepEqual(generateBoard(8, fnv1a('2026-10-24')), {
     n: 8,
-    regions: [0,0,7,7,7,7,7,7,6,2,2,6,6,7,7,7,6,6,6,6,7,7,7,7,6,6,1,6,6,6,7,7,6,1,1,6,6,6,7,4,5,5,1,1,1,4,4,4,5,5,5,3,3,3,4,4,5,5,5,3,3,4,4,4],
-    mines: [0, 10, 22, 28, 39, 43, 53, 57],
-    hardest: 3,
+    regions: [7,7,7,7,7,5,5,5,7,7,7,7,7,7,5,5,7,7,1,7,7,6,5,5,1,1,1,1,1,6,3,5,1,0,0,0,1,6,3,3,6,6,6,6,6,6,6,6,6,2,2,2,6,6,4,4,2,2,2,2,6,6,4,4],
+    mines: [5, 8, 18, 30, 33, 44, 55, 59],
+    hardest: 2,
   });
 });

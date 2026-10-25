@@ -1,6 +1,7 @@
 // Speed gate for generateBoard. Run: node tools/measure-generator.mjs
-// Measured 2026-10-24 (laptop, node): median ~20 ms (16-24 across runs), p90 ~58 ms, max ~85-100 ms per 8x8 board; target was median <= 100 ms.
-// Difficulty mix for seeds 1-50: rule 1 = 0, rule 2 = 8, rule 3 = 42 boards (rule 1 never occurs with FREE_SHARE 0.2).
+// Measured 2026-10-25 (laptop, node), minimum color size picked from 1-4: median ~49 ms, p90 ~210 ms, max ~465 ms per 8x8 board.
+// Minimum 4 boards dominate the tail (~370 ms each); minimum 5 would be ~1.6 s. Target was median <= 100 ms.
+// Difficulty mix for seeds 1-50: rule 1 = 1, rule 2 = 9, rule 3 = 40 boards.
 import { generateBoard } from '../js/generator.js';
 
 const times = [], mix = { 1: 0, 2: 0, 3: 0 };

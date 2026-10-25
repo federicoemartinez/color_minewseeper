@@ -7,7 +7,7 @@ import { solve } from './solver.js';
 
 export const BOARD_SIZE = 8;
 export const FREE_SHARE = 0.2; // share of squares that may join any color, which is what makes boards harder
-export const MIN_REGION = 2;
+export const MIN_REGIONS = [1, 2, 3, 4]; // each board picks its smallest allowed color size; 5 gets too slow (~4x per step)
 export const MAX_REGION = 16;
 
 const pick = (rand, list) => list[Math.floor(rand() * list.length)];
@@ -100,13 +100,14 @@ export const rebalance = (n, mines, regions, rand, minSize, maxSize) => {
 /** @returns {Board} */
 export const generateBoard = (n, seed) => {
   const rand = mulberry32(seed);
+  const minSize = pick(rand, MIN_REGIONS);
   for (let attempt = 0; attempt < 10000; attempt++) {
     const mines = placeMines(n, rand);
     const painted = paintRegions(n, mines, rand, FREE_SHARE);
     if (!painted) continue;
     const first = solve(n, painted);
     if (!first.solved) continue;
-    const regions = rebalance(n, mines, painted, rand, MIN_REGION, MAX_REGION);
+    const regions = rebalance(n, mines, painted, rand, minSize, MAX_REGION);
     if (!regions) continue;
     // Rebalancing can change which rules are needed, so report the difficulty of the final board.
     const result = solve(n, regions);
