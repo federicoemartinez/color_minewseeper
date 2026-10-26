@@ -78,10 +78,13 @@ function confetti() {
   document.body.append(layer);
   setTimeout(() => layer.remove(), 3500);
 }
-function drawSoundToggle() {
-  const on = store.loadSettings().sound;
-  $('sound').textContent = on ? '🔊' : '🔇';
-  $('sound').setAttribute('aria-pressed', String(on));
+function drawToggles() {
+  const { sound, textures } = store.loadSettings();
+  $('sound').textContent = sound ? '🔊' : '🔇';
+  $('sound').setAttribute('aria-pressed', String(sound));
+  $('textures').textContent = textures ? '▦' : '□';
+  $('textures').setAttribute('aria-pressed', String(textures));
+  document.documentElement.classList.toggle('textured', textures);
 }
 
 // --- Clock: runs from the first mark, pauses while the page is hidden, lives in game.elapsedMs.
@@ -323,10 +326,10 @@ addEventListener('popstate', goHome);
 $('back').addEventListener('click', leave);
 $('to-home').addEventListener('click', leave);
 $('share').addEventListener('click', share);
-$('sound').addEventListener('click', () => {
+for (const key of ['sound', 'textures']) $(key).addEventListener('click', () => {
   const settings = store.loadSettings();
-  store.saveSettings({ ...settings, sound: !settings.sound });
-  drawSoundToggle();
+  store.saveSettings({ ...settings, [key]: !settings[key] });
+  drawToggles();
 });
 // Browsers start audio only inside a user gesture: a mouse press, or a touch or pen lift.
 document.addEventListener('pointerdown', unlockAudio);
@@ -355,7 +358,7 @@ $('how-to').addEventListener('click', startGuide);
 $('guide-go').addEventListener('click', () => { markTutorialSeen(); startArena(); });
 
 applyTheme(store.loadSettings().theme);
-drawSoundToggle();
+drawToggles();
 if (store.loadSettings().tutorialSeen) showHome(); else startGuide();
 
 if ('serviceWorker' in navigator && !embedded) navigator.serviceWorker.register('./sw.js');
