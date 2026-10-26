@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mulberry32, fnv1a } from '../js/rng.js';
 import { neighbors8 } from '../js/grid.js';
 import { solve } from '../js/solver.js';
-import { placeMines, paintRegions, rebalance, generateBoard, FREE_SHARE, MIN_REGIONS, MAX_REGION } from '../js/generator.js';
+import { placeMines, paintRegions, rebalance, generateBoard, FREE_SHARE, MIN_REGIONS, MAX_REGION, MAX_PIECES, pieces } from '../js/generator.js';
 import { assertValidLayout, regionSizes } from './helpers.js';
 
 const sorted = (a) => [...a].sort((x, y) => x - y);
@@ -56,16 +56,24 @@ test('rebalance: sizes within limits, still solvable, input untouched', () => {
 test('generateBoard: valid, solvable, within limits, repeatable', () => {
   for (const seed of [1, 2, 3, 3698842276]) {
     const board = generateBoard(8, seed);
-    assertValidLayout(8, board.regions, board.mines);
+    assertValidLayout(8, board.regions, board.mines, false);
     assert.ok(regionSizes(8, board.regions).every((s) => s >= MIN_REGIONS[0] && s <= MAX_REGION));
     assert.deepEqual(solve(8, board.regions), { solved: true, hardest: board.hardest, mines: board.mines });
     assert.deepEqual(generateBoard(8, seed), board);
   }
 });
-test('generateBoard: every minimum color size shows up across seeds', () => {
+test('generateBoard: across seeds, every minimum color size shows up, and some boards split colors into 2 to MAX_PIECES pieces', () => {
   const smallest = new Set();
-  for (let seed = 1; seed <= 20; seed++) smallest.add(Math.min(...regionSizes(8, generateBoard(8, seed).regions)));
+  let split = 0, whole = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const { regions } = generateBoard(8, seed);
+    smallest.add(Math.min(...regionSizes(8, regions)));
+    const counts = [...Array(8).keys()].map((k) => pieces(8, regions, k));
+    assert.ok(counts.every((c) => c >= 1 && c <= MAX_PIECES));
+    if (counts.some((c) => c > 1)) split++; else whole++;
+  }
   for (const min of MIN_REGIONS) assert.ok(smallest.has(min), `no board with smallest color ${min}`);
+  assert.ok(split > 0 && whole > 0, `split ${split}, whole ${whole}`);
 });
 test('the 2026-10-24 daily board is pinned (a generator change must be deliberate)', () => {
   assert.deepEqual(generateBoard(8, fnv1a('2026-10-24')), {

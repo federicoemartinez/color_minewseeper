@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { neighbors4, neighbors8 } from '../js/grid.js';
+import { neighbors8 } from '../js/grid.js';
+import { pieces } from '../js/generator.js';
 
 export const regionSizes = (n, regions) => {
   const sizes = new Array(n).fill(0);
@@ -7,16 +8,15 @@ export const regionSizes = (n, regions) => {
   return sizes;
 };
 
-// Throws unless regions/mines form a legal board: connected colors, one mine per row, column and color, none touching.
-export const assertValidLayout = (n, regions, mines) => {
+// Throws unless regions/mines form a legal board: one mine per row, column and color, none touching,
+// and (when `connected`) every color in one piece.
+export const assertValidLayout = (n, regions, mines, connected = true) => {
   assert.equal(regions.length, n * n);
   assert.ok(regions.every((k) => Number.isInteger(k) && k >= 0 && k < n), 'colors must be 0..n-1');
   for (let k = 0; k < n; k++) {
     const squares = regions.flatMap((c, i) => (c === k ? [i] : []));
     assert.ok(squares.length > 0, `color ${k} is empty`);
-    const seen = new Set([squares[0]]), stack = [squares[0]];
-    while (stack.length) for (const j of neighbors4(n, stack.pop())) if (regions[j] === k && !seen.has(j)) { seen.add(j); stack.push(j); }
-    assert.equal(seen.size, squares.length, `color ${k} is not connected`);
+    if (connected) assert.equal(pieces(n, regions, k), 1, `color ${k} is not connected`);
   }
   assert.equal(mines.length, n);
   assert.equal(new Set(mines.map((m) => Math.floor(m / n))).size, n, 'one mine per row');

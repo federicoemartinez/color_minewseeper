@@ -9,6 +9,9 @@ export const BOARD_SIZE = 8;
 export const FREE_SHARE = 0.2; // share of squares that may join any color, which is what makes boards harder
 export const MIN_REGIONS = [1, 2, 3, 4]; // each board picks its smallest allowed color size; 5 gets too slow (~4x per step)
 export const MAX_REGION = 16;
+export const CONNECTED = [true, true, false]; // each board picks one: a third of boards have colors split into pieces
+export const ISLANDS = 3; // starting squares placed away from their color on a split board
+export const MAX_PIECES = 3; // most pieces one color may be split into
 
 const pick = (rand, list) => list[Math.floor(rand() * list.length)];
 
@@ -30,15 +33,22 @@ export const placeMines = (n, rand) => {
 };
 
 // Color k grows from mines[k]. A square may join color k if it is free, or if an earlier mine already rules it out
-// (then solving in mine order leaves each color a single spot). Returns null on a dead end.
-export const paintRegions = (n, mines, rand, freeShare) => {
+// (then solving in mine order leaves each color a single spot). `islands` extra starting squares go somewhere not
+// touching their color, so it can end up in pieces. Returns null on a dead end.
+export const paintRegions = (n, mines, rand, freeShare, islands = 0) => {
   const N = n * n;
   const free = Array.from({ length: N }, () => rand() < freeShare);
   const firstRuledOut = Array.from({ length: N }, (_, i) => mines.findIndex((m) =>
     m % n === i % n || Math.floor(m / n) === Math.floor(i / n) || neighbors8(n, m).includes(i)));
   const regions = new Array(N).fill(-1);
   mines.forEach((m, k) => (regions[m] = k));
-  for (let left = N - n; left; left--) {
+  for (let s = 0; s < islands; s++) {
+    const k = Math.floor(rand() * n), spots = [];
+    for (let i = 0; i < N; i++) if (regions[i] === -1 && (free[i] || firstRuledOut[i] < k)
+      && !neighbors4(n, i).some((j) => regions[j] === k)) spots.push(i);
+    if (spots.length) regions[pick(rand, spots)] = k;
+  }
+  for (let left = regions.filter((k) => k === -1).length; left; left--) {
     const options = [];
     for (let i = 0; i < N; i++) if (regions[i] === -1)
       for (const j of neighbors4(n, i)) {
@@ -52,19 +62,24 @@ export const paintRegions = (n, mines, rand, freeShare) => {
   return regions;
 };
 
-// True if color `k` is still 4-connected from `start` once square `skip` is removed from it.
-const staysConnected = (n, regions, k, start, skip) => {
-  let size = 0;
-  for (const c of regions) if (c === k) size++;
-  const seen = new Set([start]), stack = [start];
-  while (stack.length) for (const j of neighbors4(n, stack.pop()))
-    if (j !== skip && regions[j] === k && !seen.has(j)) { seen.add(j); stack.push(j); }
-  return seen.size === size - 1;
+// How many 4-connected pieces color `k` is in.
+export const pieces = (n, regions, k) => {
+  const seen = new Set();
+  let count = 0;
+  regions.forEach((c, i) => {
+    if (c !== k || seen.has(i)) return;
+    count++;
+    const stack = [i];
+    seen.add(i);
+    while (stack.length) for (const j of neighbors4(n, stack.pop()))
+      if (regions[j] === k && !seen.has(j)) { seen.add(j); stack.push(j); }
+  });
+  return count;
 };
 
-// Moves border squares between colors until every size is within [minSize, maxSize], keeping the board solvable.
-// Returns a new array, or null if it gets stuck.
-export const rebalance = (n, mines, regions, rand, minSize, maxSize) => {
+// Moves border squares between colors until every size is within [minSize, maxSize], keeping the board solvable
+// (and every color in one piece when `connected`). Returns a new array, or null if it gets stuck.
+export const rebalance = (n, mines, regions, rand, minSize, maxSize, connected = true) => {
   let cur = [...regions];
   for (let round = 0; round < 200; round++) {
     const sizes = new Array(n).fill(0);
@@ -86,9 +101,9 @@ export const rebalance = (n, mines, regions, rand, minSize, maxSize) => {
     let next = null;
     for (const [x, to] of moves) {
       const from = cur[x];
-      if (!staysConnected(n, cur, from, mines[from], x)) continue;
       const trial = [...cur];
       trial[x] = to;
+      if (connected && pieces(n, trial, from) > 1) continue;
       if (solve(n, trial).solved) { next = trial; break; }
     }
     if (!next) return null;
@@ -101,14 +116,17 @@ export const rebalance = (n, mines, regions, rand, minSize, maxSize) => {
 export const generateBoard = (n, seed) => {
   const rand = mulberry32(seed);
   const minSize = pick(rand, MIN_REGIONS);
+  const connected = pick(rand, CONNECTED);
   for (let attempt = 0; attempt < 10000; attempt++) {
     const mines = placeMines(n, rand);
-    const painted = paintRegions(n, mines, rand, FREE_SHARE);
+    const painted = paintRegions(n, mines, rand, FREE_SHARE, connected ? 0 : ISLANDS);
     if (!painted) continue;
     const first = solve(n, painted);
     if (!first.solved) continue;
-    const regions = rebalance(n, mines, painted, rand, minSize, MAX_REGION);
+    const regions = rebalance(n, mines, painted, rand, minSize, MAX_REGION, connected);
     if (!regions) continue;
+    const counts = mines.map((_, k) => pieces(n, regions, k));
+    if (!connected && (counts.every((c) => c === 1) || counts.some((c) => c > MAX_PIECES))) continue;
     // Rebalancing can change which rules are needed, so report the difficulty of the final board.
     const result = solve(n, regions);
     return { n, regions, mines: [...mines].sort((a, b) => a - b), hardest: result.hardest };
