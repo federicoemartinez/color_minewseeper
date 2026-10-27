@@ -68,6 +68,7 @@ export const SOUNDS = {
     flawless: () => { arp([1047, 1319, 1568, 2093, 1568, 2093, 2637], .08, 'sine', .16, .45); arp([2093, 2637, 3136, 4186, 3136, 4186, 5274], .08, 'sine', .04, .45); },
   },
 };
+SOUNDS.contrast = SOUNDS.flat; // high contrast is about looks; it keeps Flat's voice
 
 /** Plays `moment` in `theme`'s voice. Silent until unlockAudio has run in a user gesture. */
 export function playSound(theme, moment) {

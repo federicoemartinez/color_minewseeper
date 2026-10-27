@@ -1,6 +1,6 @@
 import { emptyStats } from './stats.js';
 
-const THEMES = ['flat', 'pixel', 'candy'];
+const THEMES = ['flat', 'pixel', 'candy', 'contrast'];
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 function defaultStorage() {

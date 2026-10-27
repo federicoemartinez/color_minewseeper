@@ -46,6 +46,8 @@ test('storage that throws never throws and keeps working in memory', () => {
   const st = createStore(throwing);
   st.saveSettings({ theme: 'candy', tutorialSeen: true });
   assert.equal(st.loadSettings().theme, 'candy');
+  st.saveSettings({ theme: 'contrast', tutorialSeen: true });
+  assert.equal(st.loadSettings().theme, 'contrast');
 });
 test('createStore() with no argument works without localStorage', () => {
   const st = createStore();

@@ -58,7 +58,7 @@ button { font: inherit; color: inherit; }
 .totals b { display: block; color: var(--ink); font-size: 22px; font-weight: 800; line-height: 1.3; }
 
 /* Theme picker: each button carries its own data-theme, so its preview uses that theme's variables. */
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .theme-opt {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   min-width: 0;

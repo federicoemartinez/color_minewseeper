@@ -338,7 +338,7 @@ document.addEventListener('keydown', unlockAudio);
 $('hint-btn').addEventListener('click', askHint);
 
 // --- Theme
-const THEME_COLOR = { flat: '#fbf8f3', pixel: '#c0c0c0', candy: '#fff4fb' };
+const THEME_COLOR = { flat: '#fbf8f3', pixel: '#c0c0c0', candy: '#fff4fb', contrast: '#000' };
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
   document.querySelector('meta[name="theme-color"]').content = THEME_COLOR[t];
