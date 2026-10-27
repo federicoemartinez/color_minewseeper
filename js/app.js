@@ -15,17 +15,27 @@ const theme = () => document.documentElement.dataset.theme;
 // Inside a portal's iframe (CrazyGames): our URL is their CDN's, and an offline cache there would pin old builds.
 const embedded = window.top !== window.self;
 
-/** @type {null | { mode: 'daily'|'arena'|'guide', date: string, game: import('./game.js').Game, tap: (i: number) => void,
- *    hint: null | { text: string, squares: number[] }, hintsAsked: number }} hintsAsked counts since the last mark. */
+/** @type {null | { mode: 'daily'|'arena'|'guide'|'labs', lab?: string, date: string, game: import('./game.js').Game,
+ *    tap: (i: number) => void, hint: null | { text: string, squares: number[] }, hintsAsked: number }}
+ *  hintsAsked counts since the last mark; lab is a LABS key. */
 let session = null;
 let runningSince = null, ticker = null;
 
+// Labs: random boards with experimental rules, outside stats and streaks. `board` goes to generateBoard, `game` to createGame.
+// ponytail: XL is 9x9 because 10x10 boards almost never generate (about 1 try in 1000); try a new paint step first.
+const LABS = {
+  diagonals: { name: 'Diagonals', n: 8, board: { diagonals: true } },
+  shapes: { name: 'Shapes', n: 8, board: { shaped: true } },
+  xl: { name: 'XL', n: 9, board: { lenient: true }, game: { autoClear: true } },
+};
+
 // Generation takes ~20 ms on a laptop (tools/measure-generator.mjs), so it stays on the main thread.
-export async function getBoard(n, seed) {
+// ponytail: XL boards take ~40 ms median but up to ~1.5 s; move generation to a worker if phones feel it.
+export async function getBoard(n, seed, opts) {
   $('loading').hidden = false;
   try {
     await new Promise((done) => requestAnimationFrame(() => setTimeout(done, 0)));
-    return generateBoard(n, seed);
+    return generateBoard(n, seed, opts);
   } finally {
     $('loading').hidden = true;
   }
@@ -45,8 +55,8 @@ const dayLabel = (key, opts = { month: 'short', day: 'numeric' }) => {
 };
 // Mouse players click: same words, the mouse's verb.
 const say = (text) => (matchMedia('(pointer: coarse)').matches ? text : text.replace(/tap/g, 'click').replace(/Tap/g, 'Click'));
-const modeLabel = (s) => ({ daily: `Daily · ${dayLabel(s.date)}`, arena: 'Arena', guide: 'How to play' })[s.mode];
-const started = (g) => g.marks.some((m) => m !== 'unknown');
+const modeLabel = (s) => ({ daily: `Daily · ${dayLabel(s.date)}`, arena: 'Arena', guide: 'How to play', labs: `Labs · ${LABS[s.lab]?.name}` })[s.mode];
+const started = (g) => g.marks.some((m) => m !== 'unknown' && m !== 'hole');
 
 function drawHearts(el, lives) {
   el.innerHTML = Array.from({ length: LIVES }, (_, k) =>
@@ -167,6 +177,11 @@ async function startArena() {
   startPlay({ mode: 'arena', date: dateKey(), game: createGame(await getBoard(BOARD_SIZE, randomSeed())) });
 }
 
+async function startLab(key) {
+  const lab = LABS[key];
+  startPlay({ mode: 'labs', lab: key, date: dateKey(), game: createGame(await getBoard(lab.n, randomSeed(), lab.board), lab.game) });
+}
+
 function startPlay(s) {
   stopClock();
   s.tap = createTapHandler({ onTap: (i) => act(s, i, 'safe'), onDoubleTap: (i) => act(s, i, 'mine') });
@@ -245,11 +260,12 @@ function giveHint(s, h, free) {
 function finish(s) {
   if (s.mode === 'guide') return sfx('won'); // no stats; renderPlay already showed the way out
   const g = s.game;
-  // For the daily, s.date is the saved record's date, even if the game ends after midnight.
-  const stats = recordResult(store.loadStats(), {
-    mode: s.mode, date: s.date, won: g.status === 'won', flawless: isFlawless(g), timeMs: g.elapsedMs,
-  });
-  store.saveStats(stats);
+  let stats = store.loadStats();
+  if (s.mode !== 'labs') {
+    // For the daily, s.date is the saved record's date, even if the game ends after midnight.
+    stats = recordResult(stats, { mode: s.mode, date: s.date, won: g.status === 'won', flawless: isFlawless(g), timeMs: g.elapsedMs });
+    store.saveStats(stats);
+  }
   // A beat to see the last move land before the result screen; Back in the meantime skips it.
   setTimeout(() => { if (s === session) showResult(s, stats); }, 900);
 }
@@ -266,6 +282,7 @@ function showResult(s, stats) {
   $('result-streak-box').hidden = s.mode !== 'daily';
   $('result-streak').textContent = `🔥 ${currentStreak(stats, dateKey())}`;
   $('share').textContent = 'Share result';
+  $('again').textContent = s.mode === 'labs' ? `New ${LABS[s.lab].name} board` : 'New arena board';
   show('result');
   fx($('banner'), 'fx-banner');
   if (won) sfx(flawless ? 'flawless' : 'won');
@@ -275,7 +292,7 @@ function showResult(s, stats) {
 async function share() {
   const g = session.game;
   const text = shareText({
-    mode: session.mode, date: session.date, won: g.status === 'won', lostBy: g.lostBy,
+    mode: session.mode, lab: LABS[session.lab]?.name, date: session.date, won: g.status === 'won', lostBy: g.lostBy,
     livesLeft: g.lives, timeMs: g.elapsedMs, url: embedded ? undefined : location.origin + location.pathname,
   });
   if (navigator.share) {
@@ -314,7 +331,12 @@ $('board').addEventListener('click', (e) => {
 });
 $('daily-play').addEventListener('click', startDaily);
 $('arena-play').addEventListener('click', startArena);
-$('again').addEventListener('click', startArena);
+$('again').addEventListener('click', () => (session?.mode === 'labs' ? startLab(session.lab) : startArena()));
+$('labs-open').addEventListener('click', () => show('labs'));
+$('labs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-lab]');
+  if (b) startLab(b.dataset.lab);
+});
 function goHome() {
   pushed = false;
   if (session?.mode === 'guide') markTutorialSeen(); // system Back out of the guide counts as done
@@ -324,6 +346,7 @@ function goHome() {
 const leave = () => { if (pushed) { pushed = false; history.back(); } else goHome(); }; // popstate then runs goHome
 addEventListener('popstate', goHome);
 $('back').addEventListener('click', leave);
+$('labs-back').addEventListener('click', leave);
 $('to-home').addEventListener('click', leave);
 $('share').addEventListener('click', share);
 for (const key of ['sound', 'textures']) $(key).addEventListener('click', () => {

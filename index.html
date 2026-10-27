@@ -56,6 +56,12 @@
         <button class="btn alt" id="arena-play" type="button">New board</button>
       </article>
 
+      <article class="card">
+        <h2>Labs</h2>
+        <p class="muted">Experimental rules and boards</p>
+        <button class="btn alt" id="labs-open" type="button">Try Labs</button>
+      </article>
+
       <div class="totals">
         <div><b id="total-played">0</b>played</div>
         <div><b id="total-won">0</b>wins</div>
@@ -100,6 +106,29 @@
       <div class="board" id="board"></div>
       <p class="hint" id="tip">Tap = safe &middot; Double tap = mine</p>
       <button class="btn" id="guide-go" type="button" hidden>Play your first board</button>
+    </section>
+
+    <section id="labs" hidden>
+      <header class="bar">
+        <button class="back" id="labs-back" type="button" aria-label="Back to home">&larr;</button>
+        <span class="mode">Labs</span>
+      </header>
+      <p class="muted">Experiments: random boards, no stats. They may change or go away.</p>
+      <article class="card">
+        <h2>Diagonals</h2>
+        <p class="muted">Still one mine per row, column and color, but no two mines share a diagonal, however far apart.</p>
+        <button class="btn" type="button" data-lab="diagonals">Play Diagonals</button>
+      </article>
+      <article class="card">
+        <h2>Shapes</h2>
+        <p class="muted">Boards cut into shapes. A row split by a gap is still one row with one mine.</p>
+        <button class="btn" type="button" data-lab="shapes">Play Shapes</button>
+      </article>
+      <article class="card">
+        <h2>XL</h2>
+        <p class="muted">9×9 with nine colors. Flag a mine and every square it rules out clears itself.</p>
+        <button class="btn" type="button" data-lab="xl">Play XL</button>
+      </article>
     </section>
 
     <section id="result" hidden>

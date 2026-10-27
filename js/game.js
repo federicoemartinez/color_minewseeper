@@ -1,21 +1,26 @@
 import { hints } from './solver.js';
+import { blocks } from './grid.js';
 
-/** @typedef {{ n: number, regions: number[], hidden: number[], marks: ('unknown'|'safe'|'mine'|'boom')[],
- *    lives: number, status: 'playing'|'won'|'lost', lostBy: null|'boom'|'lives', elapsedMs: number }} Game
- *  Plain JSON, with no Sets or classes, so a daily can be saved with JSON.stringify. */
+/** @typedef {{ n: number, regions: number[], hidden: number[], marks: ('unknown'|'safe'|'mine'|'boom'|'hole')[],
+ *    lives: number, status: 'playing'|'won'|'lost', lostBy: null|'boom'|'lives', elapsedMs: number,
+ *    diagonals?: true, autoClear?: true }} Game
+ *  Plain JSON, with no Sets or classes, so a daily can be saved with JSON.stringify.
+ *  Labs: diagonals = the board's diagonal rule; autoClear = a right flag clears every square it rules out. */
 
 export const LIVES = 3;
 
-/** @param {{ n: number, regions: number[], mines: number[] }} board @returns {Game} */
-export const createGame = (board) => ({
+/** @param {{ n: number, regions: number[], mines: number[], diagonals?: true }} board @returns {Game} */
+export const createGame = (board, { autoClear = false } = {}) => ({
   n: board.n,
   regions: [...board.regions],
   hidden: [...board.mines],
-  marks: Array(board.n * board.n).fill('unknown'),
+  marks: board.regions.map((k) => (k < 0 ? 'hole' : 'unknown')),
   lives: LIVES,
   status: 'playing',
   lostBy: null,
   elapsedMs: 0,
+  ...(board.diagonals && { diagonals: true }),
+  ...(autoClear && { autoClear: true }),
 });
 
 /** Applies one tap ('safe') or double tap ('mine') to a square. Mutates `game`. */
@@ -36,6 +41,9 @@ export const mark = (game, square, kind) => {
     return 'out-of-lives';
   }
   game.marks[square] = 'mine';
+  if (game.autoClear) game.marks.forEach((m, s) => {
+    if (m === 'unknown' && (blocks(game.n, square, s, game.diagonals) || game.regions[s] === game.regions[square])) game.marks[s] = 'safe';
+  });
   if (minesFound(game) < game.hidden.length) return 'flag';
   game.status = 'won';
   game.marks = game.marks.map((m) => (m === 'unknown' ? 'safe' : m));
@@ -53,11 +61,11 @@ const KIND = ['row', 'column', 'color'];
 /** The k-th of the deductions available now (wrapping), as a question that does not give the answer
  *  plus the squares it is about; null when there is none. Costs nothing: see takeHint. */
 export const hintFor = (game, k) => {
-  const steps = hints(game.n, game.regions, game.marks);
+  const steps = hints(game.n, game.regions, game.marks, game.diagonals);
   if (steps.length === 0) return null;
   const h = steps[k % steps.length], n = game.n;
   const kind = (u) => Math.floor(u / n);
-  const squaresOf = (u) => [...Array(n * n).keys()].filter((s) =>
+  const squaresOf = (u) => [...Array(n * n).keys()].filter((s) => game.regions[s] >= 0 &&
     [Math.floor(s / n), n + (s % n), 2 * n + game.regions[s]][kind(u)] === u);
   if (h.rule === 3) return { text: 'What would happen if there were a mine here?', squares: [h.square] };
   const what = KIND[kind(h.units[0])];

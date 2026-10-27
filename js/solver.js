@@ -1,36 +1,36 @@
-import { neighbors8 } from './grid.js';
+import { blocks } from './grid.js';
 
 // Human-style solver. A "unit" is a row, a column or a color; unit ids are
-// row r -> r, column c -> n + c, color k -> 2n + k (regions must be 0..n-1).
-// Tables that only depend on n are built once and shared by every solve() call.
+// row r -> r, column c -> n + c, color k -> 2n + k (regions must be 0..n-1, or -1 for a hole: no square there).
+// `diagonals` (Labs) swaps "mines never touch" for "at most one mine per diagonal", see blocks().
+// Tables that only depend on n and the rule are built once and shared by every solve() call.
 const tables = new Map();
 
-const tablesFor = (n) => {
-  let t = tables.get(n);
+const tablesFor = (n, diagonals) => {
+  let t = tables.get(`${n}${diagonals}`);
   if (t) return t;
   const N = n * n;
-  // base[m * N + s] = 1 when a mine on m rules out s by row, column or adjacency (colors are added per board).
+  // base[m * N + s] = 1 when a mine on m rules out s by row, column, adjacency or diagonal (colors are added per board).
   const base = new Uint8Array(N * N);
-  for (let m = 0; m < N; m++) {
-    for (let s = 0; s < N; s++) if (Math.floor(s / n) === Math.floor(m / n) || s % n === m % n) base[m * N + s] = 1;
-    for (const j of neighbors8(n, m)) base[m * N + j] = 1;
-  }
+  for (let m = 0; m < N; m++) for (let s = 0; s < N; s++) if (blocks(n, m, s, diagonals)) base[m * N + s] = 1;
   const popcount = new Uint8Array(1 << n);
   for (let s = 1; s < popcount.length; s++) popcount[s] = popcount[s >> 1] + (s & 1);
   t = { N, base, popcount };
-  tables.set(n, t);
+  tables.set(`${n}${diagonals}`, t);
   return t;
 };
 
 // Board state plus the three rules. A rule given a `found` array lists every deduction it sees there
 // and changes nothing; without one it applies the first deduction it finds.
-function setup(n, regions) {
-  const { N, base, popcount } = tablesFor(n);
+function setup(n, regions, diagonals) {
+  const { N, base, popcount } = tablesFor(n, diagonals);
   const U = 3 * n;
   // kindOf[k][s] = unit id of square s for kind k (0 row, 1 column, 2 color); units[u] = squares of unit u.
   const kindOf = [new Uint8Array(N), new Uint8Array(N), new Uint8Array(N)];
   const units = Array.from({ length: U }, () => []);
+  const cand = new Uint8Array(N).fill(1);
   for (let i = 0; i < N; i++) {
+    if (regions[i] < 0) { cand[i] = 0; continue; } // a hole is in no unit and never a candidate
     kindOf[0][i] = Math.floor(i / n);
     kindOf[1][i] = n + (i % n);
     kindOf[2][i] = 2 * n + regions[i];
@@ -40,7 +40,6 @@ function setup(n, regions) {
   const ruled = base.slice();
   for (let u = 2 * n; u < U; u++) for (const m of units[u]) for (const s of units[u]) ruled[m * N + s] = 1;
 
-  const cand = new Uint8Array(N).fill(1);
   const hasMine = new Uint8Array(U);
   const mines = [];
   const count = new Uint8Array(U);
@@ -126,8 +125,8 @@ function setup(n, regions) {
   return { N, units, cand, mines, place, findSingle, confine, lookahead };
 }
 
-export function solve(n, regions) {
-  const { mines, place, findSingle, confine, lookahead } = setup(n, regions);
+export function solve(n, regions, diagonals = false) {
+  const { mines, place, findSingle, confine, lookahead } = setup(n, regions, diagonals);
   let hardest = 1;
   while (mines.length < n) {
     const single = findSingle();
@@ -143,8 +142,8 @@ export function solve(n, regions) {
  *  { rule: 1, units: [u] } (u's only spot), { rule: 2, units, across: kind } (units confined to as many
  *  units of `across`: 0 rows, 1 columns, 2 colors; fewest units first) or { rule: 3, square } (a mine there leaves a unit empty).
  *  Marks must be true (a wrong flag already shows as 'safe'), as in game.js. */
-export function hints(n, regions, marks) {
-  const st = setup(n, regions);
+export function hints(n, regions, marks, diagonals = false) {
+  const st = setup(n, regions, diagonals);
   marks.forEach((m, s) => { if (m === 'mine') st.place(s); });
   marks.forEach((m, s) => { if (m === 'safe') st.cand[s] = 0; });
   const found = [];

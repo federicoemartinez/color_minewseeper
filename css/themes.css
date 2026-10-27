@@ -1,11 +1,12 @@
 /* One block per theme, keyed on <html data-theme> (and on each theme-picker button).
-   Region colors are --c0 … --c7: red, orange, yellow, green, blue, purple, pink, teal.
+   Region colors are --c0 … --c7: red, orange, yellow, green, blue, purple, pink, teal;
+   --c8 (tan; light gray in high contrast) only shows on Labs' 9x9 boards.
    The bare [data-theme] blocks hold variables only, so a picker button can preview another theme. */
 
 /* ---------- Flat ---------- */
 [data-theme="flat"] {
   --c0: #f4a6a6; --c1: #f7c98b; --c2: #f3e48a; --c3: #a8d8a0;
-  --c4: #9fc9ee; --c5: #c3a8e8; --c6: #f2b8d8; --c7: #95d5cf;
+  --c4: #9fc9ee; --c5: #c3a8e8; --c6: #f2b8d8; --c7: #95d5cf; --c8: #d9c3a5;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --bg: #fbf8f3;
   --card: #fff;
@@ -49,7 +50,7 @@
 /* ---------- Pixel: classic Minesweeper. Raised squares, pressed in once marked safe. ---------- */
 [data-theme="pixel"] {
   --c0: #ef8a8a; --c1: #f2c06a; --c2: #e6dc5e; --c3: #8fd08a;
-  --c4: #8fb8f0; --c5: #b79cf0; --c6: #f0a0d4; --c7: #72d0c6;
+  --c4: #8fb8f0; --c5: #b79cf0; --c6: #f0a0d4; --c7: #72d0c6; --c8: #d2b48c;
   --font: ui-monospace, "Cascadia Mono", Menlo, Consolas, "Courier New", monospace;
   --bg: #c0c0c0;
   --card: #c0c0c0;
@@ -121,7 +122,7 @@
 /* ---------- Candy: glossy rounded sweets, a cartoon bomb on a burst. ---------- */
 [data-theme="candy"] {
   --c0: #ff8fa3; --c1: #ffc75f; --c2: #f9e45b; --c3: #9be38a;
-  --c4: #7ad3ff; --c5: #c4a2ff; --c6: #f79be6; --c7: #5fe0c8;
+  --c4: #7ad3ff; --c5: #c4a2ff; --c6: #f79be6; --c7: #5fe0c8; --c8: #e8c39a;
   --font: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Arial Rounded MT Bold", system-ui, sans-serif;
   --bg: linear-gradient(#fff4fb, #f1e8ff);
   --card: #fff;
@@ -212,7 +213,7 @@
    so this theme draws the textures darker; the textures stay the cue that doesn't rely on hue. */
 [data-theme="contrast"] {
   --c0: #ff4d4d; --c1: #ff9900; --c2: #fff04d; --c3: #44d65a;
-  --c4: #3d95ff; --c5: #dcb0ff; --c6: #ff66c4; --c7: #a6fff2;
+  --c4: #3d95ff; --c5: #dcb0ff; --c6: #ff66c4; --c7: #a6fff2; --c8: #e0e0e0;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --bg: #000;
   --card: #000;

@@ -5,8 +5,8 @@ export function formatTime(ms) {
 
 const MAX_LIVES = 3;
 
-export function shareText({ mode, date, won, lostBy, livesLeft, timeMs, url }) {
-  const title = mode === 'daily' ? `Color Minefield Daily ${date}` : 'Color Minefield Arena';
+export function shareText({ mode, lab, date, won, lostBy, livesLeft, timeMs, url }) {
+  const title = mode === 'daily' ? `Color Minefield Daily ${date}` : mode === 'labs' ? `Color Minefield Labs · ${lab}` : 'Color Minefield Arena';
   const verdict = won ? (livesLeft === MAX_LIVES ? 'Flawless!' : 'Solved') : lostBy === 'boom' ? 'Boom 💥' : 'Out of lives 💔';
   const hearts = '❤️'.repeat(livesLeft) + '🤍'.repeat(MAX_LIVES - livesLeft);
   return [title, `${verdict} ${hearts} ⏱ ${formatTime(timeMs)}`, ...(url ? [url] : [])].join('\n');

@@ -12,6 +12,14 @@ export const neighbors8 = (n, i) =>
 
 export const neighbors4 = (n, i) => around(n, i, [[-1, 0], [1, 0], [0, -1], [0, 1]]);
 
+// Whether a mine on m rules out square s (m itself included): same row or column, and touching it,
+// or with `diagonals` (Labs) sharing either diagonal instead. A shared diagonal covers touching.
+export const blocks = (n, m, s, diagonals = false) => {
+  const r = Math.floor(m / n), c = m % n, rr = Math.floor(s / n), cc = s % n;
+  if (r === rr || c === cc) return true;
+  return diagonals ? r - c === rr - cc || r + c === rr + cc : Math.abs(r - rr) <= 1 && Math.abs(c - cc) <= 1;
+};
+
 // True where the neighbor on that side has a different region color; false at the edge.
 export const regionBorders = (n, regions, i) => {
   const differs = (dr, dc) => {
